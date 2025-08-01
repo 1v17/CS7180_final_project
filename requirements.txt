@@ -1,0 +1,6 @@
+torch==2.7.1
+transformers==4.54.1
+safetensors==0.5.3
+mem0ai==0.1.115
+huggingface_hub==0.34.3
+dotenv==0.9.9
