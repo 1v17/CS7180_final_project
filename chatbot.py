@@ -3,6 +3,8 @@ from mem0 import Memory
 from dotenv import load_dotenv
 import traceback
 
+DEFAULT_MAX_NEW_TOKENS = 50
+RELEVANT_MEMORIES_LIMIT = 3
 
 class ChatBot:
     """A chatbot that combines local LLM with memory capabilities."""
@@ -69,9 +71,9 @@ class ChatBot:
         
         # Handle the dictionary response from memory.search
         if isinstance(relevant_memories, dict) and 'results' in relevant_memories:
-            memory_list = relevant_memories['results'][:3]
+            memory_list = relevant_memories['results'][:RELEVANT_MEMORIES_LIMIT]
         else:
-            memory_list = list(relevant_memories)[:3] if relevant_memories else []
+            memory_list = list(relevant_memories)[:RELEVANT_MEMORIES_LIMIT] if relevant_memories else []
         
         context = "\n".join([mem["memory"] for mem in memory_list])
         
@@ -114,7 +116,7 @@ class ChatBot:
         
         return response.strip()
     
-    def get_memories(self, query, user_id="default_user", limit=5):
+    def get_memories(self, query, user_id="default_user", limit=RELEVANT_MEMORIES_LIMIT):
         """
         Retrieve memories for a user based on a query.
         
