@@ -29,12 +29,13 @@ Enhance the existing chatbot with human-like memory that naturally forgets infor
 
 ### EbbinghausMemory (extends Memory)
 
-- `__init__()`: Initialize with decay parameters
-- `add_with_strength()`: Add memory with strength metadata
-- `calculate_retention()`: Apply Ebbinghaus formula
-- `update_memory_strength()`: Update strength based on time/retrieval
-- `search_with_strength()`: Search considering memory strength
-- `forget_weak_memories()`: Remove/archive weak memories
+- `__init__()`: Initialize with decay parameters and memory mode
+- `set_memory_mode()`: Switch between perfect and ebbinghaus modes
+- `add_with_strength()`: Add memory with strength metadata (only in ebbinghaus mode)
+- `calculate_retention()`: Apply Ebbinghaus formula (bypass in perfect mode)
+- `update_memory_strength()`: Update strength based on time/retrieval (bypass in perfect mode)
+- `search_with_strength()`: Search considering memory strength (use standard search in perfect mode)
+- `forget_weak_memories()`: Remove/archive weak memories (bypass in perfect mode)
 
 ### SpacedRepetitionScheduler
 
@@ -51,12 +52,14 @@ Enhance the existing chatbot with human-like memory that naturally forgets infor
 
 ```python
 {
+    "memory_mode": "perfect",  # "perfect" or "ebbinghaus"
     "forgetting_curve": {
-        "enabled": True,
+        "enabled": False,               # Controlled by memory_mode
         "decay_rate": 0.5,              # Base decay rate
         "min_retention_threshold": 0.1,  # Minimum strength to keep
         "retrieval_boost": 0.3,         # Strength increase on retrieval
         "soft_delete": True,            # Archive vs delete
+        "maintenance_interval": 3600,   # Seconds between strength updates (3600=1hr for production, 60=1min for testing)
         "importance_weights": {         # Decay multipliers by importance
             "critical": 0.1,
             "high": 0.3,
@@ -70,63 +73,67 @@ Enhance the existing chatbot with human-like memory that naturally forgets infor
 
 ## Implementation Plan (Step-by-Step)
 
-### Phase 1: Extend Memory with Strength Metadata
+### Phase 1: Extend Memory with Mode Support
 
-**Goal**: Add memory strength tracking to existing memories
+**Goal**: Add memory strength tracking and mode switching to existing memories
 
 1. Create `ebbinghaus_memory.py` that extends Mem0's Memory class
-2. Override `add()` method to include strength metadata:
-   - `created_at`: timestamp
-   - `last_accessed`: timestamp
-   - `initial_strength`: float (0.0-1.0)
-   - `current_strength`: float (0.0-1.0)
-   - `access_count`: integer
-   - `importance`: string (critical/high/normal/low)
+2. Add `memory_mode` parameter to `__init__()` method
+3. Override `add()` method to conditionally include strength metadata:
+   - In "perfect" mode: use standard Mem0 behavior
+   - In "ebbinghaus" mode: add strength metadata:
+     - `created_at`: timestamp
+     - `last_accessed`: timestamp
+     - `initial_strength`: float (0.0-1.0)
+     - `current_strength`: float (0.0-1.0)
+     - `access_count`: integer
+     - `importance`: string (critical/high/normal/low)
 
-3. Implement `calculate_retention()` method using Ebbinghaus formula:
+4. Implement `set_memory_mode()` method to switch modes dynamically
+5. Implement `calculate_retention()` method with mode checking:
    ```
-   retention = initial_strength * e^(-time_elapsed_hours / (24 * strength_factor))
+   if memory_mode == "perfect":
+       return 1.0  # Always perfect retention
+   else:
+       return initial_strength * e^(-time_elapsed_hours / (24 * strength_factor))
    ```
 
-### Phase 2: Memory Strength Updates
+### Phase 2: Mode-Aware Memory Operations
 
-**Goal**: Update memory strength based on time decay and retrieval
+**Goal**: Update memory operations to respect the current mode
 
-1. Add `update_memory_strength()` method that:
-   - Calculates time elapsed since last access
-   - Applies decay formula
-   - Boosts strength if memory was retrieved
-   - Updates metadata
+1. Add `update_memory_strength()` method with mode checking:
+   - In "perfect" mode: skip strength updates
+   - In "ebbinghaus" mode: apply decay and retrieval boosts
 
-2. Modify `search()` method to:
-   - Update strength of retrieved memories
-   - Filter out memories below threshold
-   - Sort by combined relevance and strength scores
+2. Modify `search()` method to be mode-aware:
+   - In "perfect" mode: use standard Mem0 search
+   - In "ebbinghaus" mode: filter by strength and update accessed memories
 
-### Phase 3: Automatic Forgetting Process
+### Phase 3: Conditional Forgetting Process
 
-**Goal**: Remove or archive weak memories
+**Goal**: Only apply forgetting in ebbinghaus mode
 
-1. Implement `forget_weak_memories()` method:
-   - Scan all memories and update strengths
-   - Archive memories below threshold (soft delete)
-   - Option for hard delete
+1. Implement `forget_weak_memories()` method with mode checking:
+   - In "perfect" mode: skip forgetting entirely
+   - In "ebbinghaus" mode: apply forgetting logic
 
-2. Add configuration options:
-   - `forgetting_threshold`: minimum strength to keep memory
-   - `soft_delete`: archive vs permanent deletion
-   - `decay_rate`: how fast memories decay
+2. Add mode validation in configuration
 
-### Phase 4: Background Maintenance
+### Phase 4: Mode-Aware Background Maintenance
 
-**Goal**: Automate memory maintenance
+**Goal**: Automate memory maintenance only when needed
 
-1. Create `memory_scheduler.py` with:
-   - Daily forgetting process
-   - Hourly strength updates
-   - Memory statistics tracking
+1. Create `memory_scheduler.py` with mode awareness and configurable intervals:
+   - Only start background tasks in "ebbinghaus" mode
+   - Disable all scheduling in "perfect" mode
+   - Use `maintenance_interval` from config for update frequency
+   - Allow dynamic mode switching without restart
+   - Support different intervals for testing (short) vs production (long)
 
-2. Use threading or async for background tasks
+2. Add `set_maintenance_interval()` method for runtime adjustment:
+   - Useful for switching between test/production without restart
+   - Automatically restart scheduler with new interval
 
 ### Phase 5: Spaced Repetition System
 
@@ -139,13 +146,19 @@ Enhance the existing chatbot with human-like memory that naturally forgets infor
 
 2. Add `get_memories_for_review()` method
 
-### Phase 6: Integration with ChatBot
+### Phase 6: Integration with ChatBot and Mode Control
 
-**Goal**: Use enhanced memory in the chatbot
+**Goal**: Allow chatbot to switch memory modes
 
-1. Update `chatbot.py` to use EbbinghausMemory
-2. Add importance classification for different types of information
-3. Implement context-aware memory retrieval
+1. Update `chatbot.py` to:
+   - Initialize with desired memory mode
+   - Add `set_memory_mode()` method for runtime switching
+   - Display current memory mode in status/info commands
+
+2. Add user commands for mode switching:
+   - `/memory_mode perfect` - Switch to perfect memory
+   - `/memory_mode ebbinghaus` - Switch to forgetting mode
+   - `/memory_status` - Show current mode and memory statistics
 
 ### Phase 7: Testing and Optimization
 
