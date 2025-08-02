@@ -243,6 +243,11 @@ class EbbinghausMemory(Memory):
         filtered_results = []
         
         for memory in memory_list:
+            # Skip archived memories (soft-deleted)
+            memory_content = memory.get("memory", "")
+            if memory_content.startswith("[ARCHIVED]"):
+                continue
+                
             if "metadata" not in memory:
                 # Memory without metadata - include as-is
                 filtered_results.append(memory)
@@ -297,7 +302,20 @@ class EbbinghausMemory(Memory):
         
         try:
             # Get all memories for user
-            all_memories = self.get_all(user_id=user_id)
+            all_memories_result = self.get_all(user_id=user_id)
+            
+            # Handle different return formats from get_all()
+            if isinstance(all_memories_result, dict):
+                if "results" in all_memories_result:
+                    all_memories = all_memories_result["results"]
+                else:
+                    print(f"get_all returned dict without 'results' key: {list(all_memories_result.keys())}")
+                    return stats
+            elif isinstance(all_memories_result, list):
+                all_memories = all_memories_result
+            else:
+                print(f"get_all returned unexpected type: {type(all_memories_result)}")
+                return stats
             
             for memory in all_memories:
                 stats["processed"] += 1
@@ -318,10 +336,23 @@ class EbbinghausMemory(Memory):
                 if retention < self.fc_config.get("min_retention_threshold", 0.1):
                     memory_id = memory.get("id")
                     if memory_id:
-                        # Delete the memory (both soft and hard delete do the same thing now
-                        # since we can't reliably update metadata)
-                        self.delete(memory_id)
-                        stats["forgotten"] += 1
+                        if soft_delete:
+                            # Soft delete: Update memory content to mark as archived
+                            try:
+                                original_content = memory.get("memory", "")
+                                archived_content = f"[ARCHIVED] {original_content}"
+                                
+                                # Try to update the memory content to mark as archived
+                                self.update(memory_id, data=archived_content)
+                                stats["archived"] += 1
+                            except Exception as e:
+                                # If update fails, fall back to hard delete
+                                self.delete(memory_id)
+                                stats["forgotten"] += 1
+                        else:
+                            # Hard delete: Remove the memory completely
+                            self.delete(memory_id)
+                            stats["forgotten"] += 1
             
         except Exception as e:
             print(f"Error in forget_weak_memories: {e}")
@@ -368,7 +399,44 @@ class EbbinghausMemory(Memory):
                 }
             
             # Get all memories for the specified user
-            all_memories = self.get_all(user_id=user_id)
+            all_memories_result = self.get_all(user_id=user_id)
+            
+            # Handle different return formats from get_all()
+            if isinstance(all_memories_result, dict):
+                # get_all might return {"results": [...]} format like search()
+                if "results" in all_memories_result:
+                    all_memories = all_memories_result["results"]
+                else:
+                    # get_all returned a dict but not in expected format
+                    return {
+                        "mode": self.memory_mode,
+                        "total_memories": f"Error: get_all returned dict without 'results' key",
+                        "ebbinghaus_memories": 0,
+                        "standard_memories": 0,
+                        "average_strength": 0.0,
+                        "average_retention": 0.0,
+                        "strong_memories": 0,
+                        "weak_memories": 0,
+                        "archived_memories": 0,
+                        "note": f"get_all dict keys: {list(all_memories_result.keys())}"
+                    }
+            elif isinstance(all_memories_result, list):
+                all_memories = all_memories_result
+            else:
+                # get_all returned something unexpected
+                return {
+                    "mode": self.memory_mode,
+                    "total_memories": f"Error: get_all returned {type(all_memories_result).__name__}",
+                    "ebbinghaus_memories": 0,
+                    "standard_memories": 0,
+                    "average_strength": 0.0,
+                    "average_retention": 0.0,
+                    "strong_memories": 0,
+                    "weak_memories": 0,
+                    "archived_memories": 0,
+                    "note": f"get_all returned: {str(all_memories_result)[:100]}..."
+                }
+            
             stats["total_memories"] = len(all_memories)
             
             if self.memory_mode == "standard":
@@ -380,14 +448,24 @@ class EbbinghausMemory(Memory):
             retentions = []
             
             for memory in all_memories:
+                # Check if memory is archived (soft-deleted)
+                memory_content = memory.get("memory", "")
+                is_archived = memory_content.startswith("[ARCHIVED]")
+                
                 if "metadata" not in memory:
                     stats["standard_memories"] += 1
+                    if is_archived:
+                        stats["archived_memories"] += 1
                     continue
                 
                 metadata = memory["metadata"]
                 
                 if metadata.get("mode") == "ebbinghaus":
                     stats["ebbinghaus_memories"] += 1
+                    
+                    if is_archived:
+                        stats["archived_memories"] += 1
+                        continue  # Skip strength/retention calculations for archived memories
                     
                     # Track strength
                     strength = metadata.get("memory_strength", 1.0)
@@ -404,12 +482,10 @@ class EbbinghausMemory(Memory):
                     # Count strong memories (high retention)
                     if retention > 0.5:
                         stats["strong_memories"] += 1
-                    
-                    # Count archived memories
-                    if metadata.get("archived", False):
-                        stats["archived_memories"] += 1
                 else:
                     stats["standard_memories"] += 1
+                    if is_archived:
+                        stats["archived_memories"] += 1
             
             # Calculate averages
             if strengths:
@@ -419,5 +495,89 @@ class EbbinghausMemory(Memory):
                 
         except Exception as e:
             print(f"Error getting memory statistics: {e}")
+            # Return a basic stats dictionary even on error
+            return {
+                "mode": self.memory_mode,
+                "total_memories": f"Error: {str(e)}",
+                "ebbinghaus_memories": 0,
+                "standard_memories": 0,
+                "average_strength": 0.0,
+                "average_retention": 0.0,
+                "strong_memories": 0,
+                "weak_memories": 0,
+                "archived_memories": 0,
+                "error": str(e)
+            }
         
         return stats
+    
+    def get_archived_memories(self, user_id: str = None) -> List[Dict]:
+        """
+        Retrieve archived (soft-deleted) memories.
+        
+        Args:
+            user_id (str, optional): User identifier
+            
+        Returns:
+            List[Dict]: List of archived memories
+        """
+        try:
+            all_memories_result = self.get_all(user_id=user_id)
+            
+            # Handle different return formats from get_all()
+            if isinstance(all_memories_result, dict):
+                if "results" in all_memories_result:
+                    all_memories = all_memories_result["results"]
+                else:
+                    print(f"get_all returned dict without 'results' key: {list(all_memories_result.keys())}")
+                    return []
+            elif isinstance(all_memories_result, list):
+                all_memories = all_memories_result
+            else:
+                print(f"get_all returned unexpected type: {type(all_memories_result)}")
+                return []
+            
+            archived_memories = []
+            
+            for memory in all_memories:
+                memory_content = memory.get("memory", "")
+                if memory_content.startswith("[ARCHIVED]"):
+                    # Remove the [ARCHIVED] prefix for display
+                    memory_copy = memory.copy()
+                    memory_copy["original_memory"] = memory_content[10:]  # Remove "[ARCHIVED] "
+                    memory_copy["archived"] = True
+                    archived_memories.append(memory_copy)
+            
+            return archived_memories
+            
+        except Exception as e:
+            print(f"Error retrieving archived memories: {e}")
+            return []
+    
+    def restore_memory(self, memory_id: str) -> bool:
+        """
+        Restore an archived memory by removing the [ARCHIVED] prefix.
+        
+        Args:
+            memory_id (str): ID of the memory to restore
+            
+        Returns:
+            bool: True if successfully restored, False otherwise
+        """
+        try:
+            memory_details = self.get(memory_id)
+            if not memory_details:
+                return False
+            
+            memory_content = memory_details.get("memory", "")
+            if memory_content.startswith("[ARCHIVED]"):
+                # Remove the [ARCHIVED] prefix
+                restored_content = memory_content[10:]  # Remove "[ARCHIVED] "
+                self.update(memory_id, data=restored_content)
+                return True
+            
+            return False  # Memory was not archived
+            
+        except Exception as e:
+            print(f"Error restoring memory: {e}")
+            return False

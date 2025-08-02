@@ -193,7 +193,7 @@ class ChatBot:
         print("\nAvailable commands:")
         print("  /help - Show this help message")
         print("  /memory_status - Show current memory mode and statistics")
-        print("  /memory_maintenance - Show maintenance scheduler status")
+        print("  /memory_maintenance - Show maintenance scheduler status (ebbinghaus mode only)")
         print("  /force_maintenance - Force immediate memory maintenance (ebbinghaus mode only)")
         print("  /quit - Exit the chatbot")
         print()
@@ -209,27 +209,34 @@ class ChatBot:
                 # Use default_user for statistics to avoid the user_id requirement
                 stats = self.memory.get_memory_statistics(user_id="default_user")
                 
-                # Handle the case where total_memories might be a string (error message)
-                total_memories = stats.get('total_memories', 'N/A')
-                print(f"Total Memories: {total_memories}")
-                
-                if self.memory_mode == "ebbinghaus":
-                    strong_count = stats.get('strong_memories', 'N/A')
-                    weak_count = stats.get('weak_memories', 'N/A') 
-                    avg_strength = stats.get('average_strength', 0.0)
-                    oldest_age = stats.get('oldest_memory_age', 'N/A')
+                # Check if stats is actually a dictionary
+                if isinstance(stats, dict):
+                    # Handle the case where total_memories might be a string (error message)
+                    total_memories = stats.get('total_memories', 'N/A')
+                    print(f"Total Memories: {total_memories}")
                     
-                    print(f"Strong Memories (>0.5): {strong_count}")
-                    print(f"Weak Memories (<0.3): {weak_count}")
-                    
-                    if isinstance(avg_strength, (int, float)):
-                        print(f"Average Strength: {avg_strength:.3f}")
-                    else:
-                        print(f"Average Strength: {avg_strength}")
+                    if self.memory_mode == "ebbinghaus":
+                        strong_count = stats.get('strong_memories', 'N/A')
+                        weak_count = stats.get('weak_memories', 'N/A') 
+                        archived_count = stats.get('archived_memories', 'N/A')
+                        avg_strength = stats.get('average_strength', 0.0)
+                        oldest_age = stats.get('oldest_memory_age', 'N/A')
                         
-                    print(f"Oldest Memory: {oldest_age}")
+                        print(f"Strong Memories (>0.5): {strong_count}")
+                        print(f"Weak Memories (<0.3): {weak_count}")
+                        print(f"Archived Memories: {archived_count}")
+                        
+                        if isinstance(avg_strength, (int, float)):
+                            print(f"Average Strength: {avg_strength:.3f}")
+                        else:
+                            print(f"Average Strength: {avg_strength}")
+                            
+                        print(f"Oldest Memory: {oldest_age}")
+                    else:
+                        print("Memory strength tracking disabled in standard mode")
                 else:
-                    print("Memory strength tracking disabled in standard mode")
+                    # stats is not a dictionary (might be an error string)
+                    print(f"Memory statistics error: {stats}")
             else:
                 print("Memory statistics not available")
         except Exception as e:
