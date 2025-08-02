@@ -45,13 +45,12 @@ Enhance the existing chatbot with human-like memory that naturally forgets infor
 ### Key Achievements So Far
 
 1. **Dual-Mode Architecture**: Successfully implemented backward-compatible system that can operate in both standard (perfect memory) and Ebbinghaus (forgetting) modes
-2. **Runtime Mode Switching**: Users can switch between memory modes without restart
-3. **Intelligent Metadata Management**: Conditional metadata addition based on mode
-4. **Complete Ebbinghaus Implementation**: Full forgetting curve formula with configurable parameters
-5. **Advanced Memory Operations**: Mode-aware search, strength updates, and forgetting processes
-6. **Comprehensive Configuration**: Flexible config system with testing and production presets
-7. **Robust Error Handling**: Graceful degradation and comprehensive validation
-8. **Automated Background Maintenance**: Intelligent scheduling system that only operates when needed
+2. **Intelligent Metadata Management**: Conditional metadata addition based on mode
+3. **Complete Ebbinghaus Implementation**: Full forgetting curve formula with configurable parameters
+4. **Advanced Memory Operations**: Mode-aware search, strength updates, and forgetting processes
+5. **Comprehensive Configuration**: Flexible config system with testing and production presets
+6. **Robust Error Handling**: Graceful degradation and comprehensive validation
+7. **Automated Background Maintenance**: Intelligent scheduling system that only operates when needed
 
 ### Next Phase Priority
 
@@ -257,13 +256,11 @@ Enhance the existing chatbot with human-like memory that naturally forgets infor
 1. Update `chatbot.py` to:
 
    - Initialize with desired memory mode
-   - Add `set_memory_mode()` method for runtime switching
    - Display current memory mode in status/info commands
    - Integrate with `MemoryMaintenanceScheduler`
+   - Separate the main function to a new file to run the bot
 
-2. Add user commands for mode switching:
-   - `/memory_mode standard` - Switch to standard memory
-   - `/memory_mode ebbinghaus` - Switch to forgetting mode
+2. Add user commands:
    - `/memory_status` - Show current mode and memory statistics
    - `/memory_maintenance` - Force maintenance or view scheduler status
 
@@ -281,7 +278,6 @@ Enhance the existing chatbot with human-like memory that naturally forgets infor
    - Memory decay over time
    - Retrieval strengthening
    - Forgetting process
-   - Mode switching functionality
    - Background maintenance scheduling
    - Scheduler behavior across mode changes
 
