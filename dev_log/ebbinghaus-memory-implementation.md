@@ -55,17 +55,11 @@ Enhance the existing chatbot with human-like memory that naturally forgets infor
     "memory_mode": "standard",  # "standard" or "ebbinghaus"
     "forgetting_curve": {
         "enabled": False,               # Controlled by memory_mode
-        "decay_rate": 0.5,              # Base decay rate
+        "initial_strength": 1,              # Base strength
         "min_retention_threshold": 0.1,  # Minimum strength to keep
-        "retrieval_boost": 0.3,         # Strength increase on retrieval
+        "retrieval_boost": 0.5,         # Strength increase on retrieval
         "soft_delete": True,            # Archive vs delete
-        "maintenance_interval": 3600,   # Seconds between strength updates (3600=1hr for production, 60=1min for testing)
-        "importance_weights": {         # Decay multipliers by importance
-            "critical": 0.1,
-            "high": 0.3,
-            "normal": 0.5,
-            "low": 0.8
-        }
+        "maintenance_interval": 60,   # Seconds between strength updates (3600=1hr for production, 60=1min for testing)
     }
 }
 ```
@@ -84,10 +78,8 @@ Enhance the existing chatbot with human-like memory that naturally forgets infor
    - In "ebbinghaus" mode: add strength metadata:
      - `created_at`: timestamp
      - `last_accessed`: timestamp
-     - `initial_strength`: float (0.0-1.0)
-     - `current_strength`: float (0.0-1.0)
+     - `memory_strength`: float (0.0-1.0)
      - `access_count`: integer
-     - `importance`: string (critical/high/normal/low)
 
 4. Implement `set_memory_mode()` method to switch modes dynamically
 5. Implement `calculate_retention()` method with mode checking:
@@ -95,7 +87,7 @@ Enhance the existing chatbot with human-like memory that naturally forgets infor
    if memory_mode == "standard":
        return 1.0  # Always standard retention
    else:
-       return initial_strength * e^(-time_elapsed_hours / (24 * strength_factor))
+       return e^(-time_elapsed_hours / (24 * strength))
    ```
 
 ### Phase 2: Mode-Aware Memory Operations
@@ -140,7 +132,6 @@ Enhance the existing chatbot with human-like memory that naturally forgets infor
 **Goal**: Identify memories that need reinforcement
 
 1. Implement `SpacedRepetitionScheduler` class:
-   - Calculate optimal review intervals
    - Adjust based on memory strength
    - Generate review reminders
 
@@ -182,7 +173,7 @@ project/
 ├── spaced_repetition.py    # Spaced repetition logic
 ├── memory_config.py        # Configuration settings
 ├── tests/
-│   ├── test_decay.py      # Test memory decay
+│   ├── test_forgetting.py      # Test memory decay
 │   ├── test_retrieval.py  # Test retrieval strengthening
 │   └── test_forgetting.py # Test forgetting process
 └── README.md

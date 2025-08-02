@@ -5,6 +5,9 @@ import traceback
 
 DEFAULT_MAX_NEW_TOKENS = 50
 RELEVANT_MEMORIES_LIMIT = 3
+INPUT_MAX_LENGTH = 512
+OUTPUT_TEMPORARY = 0.7
+OUTPUT_TOP_P = 0.9
 
 class ChatBot:
     """A chatbot that combines local LLM with memory capabilities."""
@@ -89,7 +92,7 @@ class ChatBot:
             return_tensors="pt",
             padding=False,  # No padding needed for single sequence
             truncation=True,
-            max_length=512  # Adjust as needed
+            max_length=INPUT_MAX_LENGTH
         )
         
         outputs = self.model.generate(
@@ -98,8 +101,8 @@ class ChatBot:
             max_length=inputs.input_ids.shape[1] + max_new_tokens,
             pad_token_id=self.tokenizer.pad_token_id,
             do_sample=True,
-            temperature=0.7,
-            top_p=0.9
+            temperature=OUTPUT_TEMPORARY,
+            top_p=OUTPUT_TOP_P
         )
         
         # Decode response
