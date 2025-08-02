@@ -2,6 +2,9 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 from mem0 import Memory
 from dotenv import load_dotenv
 import traceback
+from ebbinghaus_memory import EbbinghausMemory
+from memory_scheduler import MemoryMaintenanceScheduler
+from memory_config import MemoryConfig
 
 DEFAULT_MAX_NEW_TOKENS = 50
 RELEVANT_MEMORIES_LIMIT = 3
@@ -10,19 +13,24 @@ OUTPUT_TEMPORARY = 0.7
 OUTPUT_TOP_P = 0.9
 
 class ChatBot:
-    """A chatbot that combines local LLM with memory capabilities."""
+    """A chatbot that combines local LLM with Ebbinghaus memory capabilities."""
     
-    def __init__(self, model_path="./models/test_local_model"):
+    def __init__(self, model_path="./models/test_local_model", memory_mode="standard", config_mode="default"):
         """
-        Initialize the chatbot with model and memory.
+        Initialize the chatbot with model and Ebbinghaus memory.
         
         Args:
             model_path (str): Path to the local model directory
+            memory_mode (str): Memory mode - "standard" or "ebbinghaus"
+            config_mode (str): Configuration preset - "default", "testing", or "production"
         """
         self.model_path = model_path
         self.model = None
         self.tokenizer = None
         self.memory = None
+        self.scheduler = None
+        self.memory_mode = memory_mode
+        self.config_mode = config_mode
         
         # Load environment variables
         load_dotenv()
@@ -30,6 +38,7 @@ class ChatBot:
         # Initialize components
         self._load_model()
         self._setup_memory()
+        self._setup_scheduler()
     
     def _load_model(self):
         """Load the local model and tokenizer."""
@@ -44,18 +53,18 @@ class ChatBot:
         print("\nModel loaded successfully!")
     
     def _setup_memory(self):
-        """Set up mem0 with OpenRouter configuration."""
-        memory_config = {
-            "llm": {
-                "provider": "openai",
-                "config": {
-                    "model": "gpt-4o-mini",
-                }
-            }
-        }
+        """Set up Ebbinghaus memory with configuration."""
+        config = MemoryConfig.get_config(self.config_mode)
+        config["memory_mode"] = self.memory_mode  # Override with user preference
         
-        self.memory = Memory.from_config(memory_config)
-        print("\nMemory system initialized!")
+        self.memory = EbbinghausMemory(config=config, memory_mode=self.memory_mode)
+        print(f"\nEbbinghaus Memory system initialized in '{self.memory_mode}' mode!")
+    
+    def _setup_scheduler(self):
+        """Set up memory maintenance scheduler."""
+        self.scheduler = MemoryMaintenanceScheduler(self.memory)
+        self.scheduler.start()
+        print("Memory maintenance scheduler started!")
     
     def chat(self, message, user_id="default_user", max_new_tokens=50):
         """
@@ -117,6 +126,19 @@ class ChatBot:
             user_id=user_id
         )
         
+        # Periodically trigger forgetting process for this user (Ebbinghaus mode only)
+        if self.memory_mode == "ebbinghaus":
+            try:
+                # Trigger forgetting occasionally (every ~10 interactions per user)
+                import random
+                if random.random() < 0.1:  # 10% chance
+                    forgetting_results = self.memory.forget_weak_memories(user_id=user_id)
+                    if forgetting_results.get('forgotten', 0) > 0:
+                        print(f"[Memory] Forgot {forgetting_results['forgotten']} weak memories")
+            except Exception as e:
+                # Don't let forgetting errors break the chat
+                pass
+        
         return response.strip()
     
     def get_memories(self, query, user_id="default_user", limit=RELEVANT_MEMORIES_LIMIT):
@@ -146,38 +168,123 @@ class ChatBot:
             print(f"Error retrieving memories: {e}")
             return []
     
-
-
-
-def main():
-    """Main function for interactive chatbot usage."""
-    try:
-        # Initialize chatbot
-        print("Initializing ChatBot...")
-        chatbot = ChatBot()
-        print("ChatBot ready! Type 'quit' to exit.\n")
+    def handle_command(self, command: str) -> None:
+        """
+        Handle special commands from the user.
         
-        # Interactive chat loop
-        while True:
-            user_input = input("You: ").strip()
-            
-            if user_input.lower() in ['quit', 'exit', 'bye']:
-                print("Goodbye!")
-                break
-            
-            if not user_input:
-                continue
+        Args:
+            command (str): Command string starting with '/'
+        """
+        command = command.lower().strip()
+        
+        if command == '/help':
+            self._show_help()
+        elif command == '/memory_status':
+            self._show_memory_status()
+        elif command == '/memory_maintenance':
+            self._show_maintenance_status()
+        elif command.startswith('/force_maintenance'):
+            self._force_maintenance()
+        else:
+            print(f"Unknown command: {command}. Type /help for available commands.")
+    
+    def _show_help(self) -> None:
+        """Show available commands."""
+        print("\nAvailable commands:")
+        print("  /help - Show this help message")
+        print("  /memory_status - Show current memory mode and statistics")
+        print("  /memory_maintenance - Show maintenance scheduler status")
+        print("  /force_maintenance - Force immediate memory maintenance (ebbinghaus mode only)")
+        print("  /quit - Exit the chatbot")
+        print()
+    
+    def _show_memory_status(self) -> None:
+        """Show current memory mode and statistics."""
+        print(f"\n=== Memory Status ===")
+        print(f"Current Mode: {self.memory_mode}")
+        print(f"Config Mode: {self.config_mode}")
+        
+        try:
+            if hasattr(self.memory, 'get_memory_statistics'):
+                # Use default_user for statistics to avoid the user_id requirement
+                stats = self.memory.get_memory_statistics(user_id="default_user")
                 
-            # Get bot response
-            response = chatbot.chat(user_input)
-            print(f"Bot: {response}\n")
-            
-    except KeyboardInterrupt:
-        print("\nGoodbye!")
-    except Exception as e:
-        print(f"Error: {e}")
-        traceback.print_exc()
+                # Handle the case where total_memories might be a string (error message)
+                total_memories = stats.get('total_memories', 'N/A')
+                print(f"Total Memories: {total_memories}")
+                
+                if self.memory_mode == "ebbinghaus":
+                    strong_count = stats.get('strong_memories', 'N/A')
+                    weak_count = stats.get('weak_memories', 'N/A') 
+                    avg_strength = stats.get('average_strength', 0.0)
+                    oldest_age = stats.get('oldest_memory_age', 'N/A')
+                    
+                    print(f"Strong Memories (>0.5): {strong_count}")
+                    print(f"Weak Memories (<0.3): {weak_count}")
+                    
+                    if isinstance(avg_strength, (int, float)):
+                        print(f"Average Strength: {avg_strength:.3f}")
+                    else:
+                        print(f"Average Strength: {avg_strength}")
+                        
+                    print(f"Oldest Memory: {oldest_age}")
+                else:
+                    print("Memory strength tracking disabled in standard mode")
+            else:
+                print("Memory statistics not available")
+        except Exception as e:
+            print(f"Error retrieving memory statistics: {e}")
+        
+        print()
+    
+    def _show_maintenance_status(self) -> None:
+        """Show maintenance scheduler status."""
+        print(f"\n=== Maintenance Status ===")
+        
+        if self.scheduler:
+            try:
+                status = self.scheduler.get_status()
+                print(f"Scheduler Running: {status.get('is_running', False)}")
+                print(f"Mode: {status.get('memory_mode', 'N/A')}")
+                print(f"Maintenance Interval: {status.get('maintenance_interval', 'N/A')} seconds")
+                print(f"Last Maintenance: {status.get('last_maintenance', 'Never')}")
+                print(f"Maintenance Count: {status.get('maintenance_count', 0)}")
+                print(f"Error Count: {status.get('error_count', 0)}")
+            except Exception as e:
+                print(f"Error retrieving scheduler status: {e}")
+        else:
+            print("No scheduler available")
+        
+        print()
+    
+    def _force_maintenance(self) -> None:
+        """Force immediate memory maintenance."""
+        if self.memory_mode != "ebbinghaus":
+            print("Maintenance only available in 'ebbinghaus' mode")
+            return
+        
+        if not self.scheduler:
+            print("No scheduler available")
+            return
+        
+        print("Forcing memory maintenance...")
+        try:
+            result = self.scheduler.force_maintenance()
+            if result:
+                print("Maintenance completed successfully!")
+                self._show_maintenance_status()
+            else:
+                print("Maintenance failed or scheduler not running")
+        except Exception as e:
+            print(f"Error during maintenance: {e}")
+    
+    def shutdown(self) -> None:
+        """Gracefully shutdown the chatbot and scheduler."""
+        print("Shutting down chatbot...")
+        if self.scheduler:
+            self.scheduler.stop()
+            print("Memory scheduler stopped")
+        print("Shutdown complete")
+    
 
-
-if __name__ == "__main__":
-    main()
+# Main function removed - use main.py to run the chatbot
