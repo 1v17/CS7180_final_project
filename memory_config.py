@@ -3,9 +3,6 @@ Memory Configuration for Ebbinghaus Memory System
 
 This module provides configuration settings for the Ebbinghaus memory system,
 allowing easy switching between modes and adjustment of parameters.
-
-Author: CS7180 Final Project  
-Date: August 2025
 """
 
 from typing import Dict, Any

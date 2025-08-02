@@ -5,9 +5,6 @@ This module extends Mem0's Memory class to support memory decay based on the
 Ebbinghaus forgetting curve. It provides two modes:
 - "standard": Traditional perfect memory (default Mem0 behavior)
 - "ebbinghaus": Memory with strength tracking and decay over time
-
-Author: CS7180 Final Project
-Date: August 2025
 """
 
 import time
@@ -15,7 +12,8 @@ import math
 from datetime import datetime, timezone
 from typing import Dict, List, Any, Optional, Union
 from mem0 import Memory
-from memory_config import MemoryConfig  # Add this import
+from mem0.configs.base import MemoryConfig as Mem0Config
+from memory_config import MemoryConfig
 
 
 class EbbinghausMemory(Memory):
@@ -33,10 +31,36 @@ class EbbinghausMemory(Memory):
         Initialize EbbinghausMemory with mode support.
         
         Args:
-            config (Dict, optional): Memory configuration for Mem0
+            config (Dict, optional): Ebbinghaus configuration dictionary
             memory_mode (str): Memory mode - "standard" or "ebbinghaus"
         """
-        super().__init__(config)
+        # Set up environment for mem0
+        import os
+        if not os.environ.get('OPENAI_API_KEY'):
+            os.environ['OPENAI_API_KEY'] = 'dummy-key-for-testing'
+        
+        # Get our Ebbinghaus configuration
+        if config:
+            self.ebbinghaus_config = config
+        else:
+            self.ebbinghaus_config = MemoryConfig.get_config("default")
+        
+        # Extract LLM config for mem0 and create proper mem0 config
+        llm_config = self.ebbinghaus_config.get("llm", {
+            "provider": "openai",
+            "config": {
+                "model": "gpt-4o-mini",
+            }
+        })
+        
+        # Create mem0 config with just the LLM configuration
+        mem0_config = Mem0Config()
+        # Override the LLM config in mem0's config if needed
+        if hasattr(mem0_config, 'llm') and hasattr(mem0_config.llm, 'config'):
+            mem0_config.llm.config.update(llm_config.get("config", {}))
+        
+        # Initialize parent class with proper mem0 config
+        super().__init__(mem0_config)
         
         # Validate memory mode
         if memory_mode not in ["standard", "ebbinghaus"]:
@@ -44,12 +68,8 @@ class EbbinghausMemory(Memory):
         
         self.memory_mode = memory_mode
         
-        # Use MemoryConfig for configuration management
-        if config:
-            self.config = MemoryConfig.from_dict(config)
-        else:
-            # Use default configuration
-            self.config = MemoryConfig()
+        # Extract forgetting curve parameters for easy access
+        self.fc_config = self.ebbinghaus_config.get("forgetting_curve", {})
         
         print(f"EbbinghausMemory initialized in '{self.memory_mode}' mode")
     
@@ -91,7 +111,7 @@ class EbbinghausMemory(Memory):
         ebbinghaus_metadata = {
             "created_at": current_time,
             "last_accessed": current_time,
-            "memory_strength": self.config["initial_strength"],
+            "memory_strength": self.fc_config.get("initial_strength", 1.0),
             "access_count": 0,
             "mode": "ebbinghaus"
         }
@@ -130,7 +150,7 @@ class EbbinghausMemory(Memory):
             time_elapsed = (current_time - created_at).total_seconds() / 3600
             
             # Get memory strength
-            strength = memory_metadata.get("memory_strength", self.config["initial_strength"])
+            strength = memory_metadata.get("memory_strength", self.fc_config.get("initial_strength", 1.0))
             
             # Apply Ebbinghaus forgetting curve: R(t) = e^(-t/(24*S))
             # Where R(t) is retention, t is time in hours, S is strength factor
@@ -176,8 +196,8 @@ class EbbinghausMemory(Memory):
             
             # Apply retrieval boost if requested
             if boost:
-                current_strength = metadata.get("memory_strength", self.config["initial_strength"])
-                boost_amount = self.config["retrieval_boost"]
+                current_strength = metadata.get("memory_strength", self.fc_config.get("initial_strength", 1.0))
+                boost_amount = self.fc_config.get("retrieval_boost", 0.5)
                 new_strength = min(current_strength + boost_amount, 1.0)  # Cap at 1.0
                 metadata["memory_strength"] = new_strength
             
@@ -232,7 +252,7 @@ class EbbinghausMemory(Memory):
             retention = self.calculate_retention(metadata)
             
             # Filter by minimum retention threshold
-            if retention >= self.config["min_retention_threshold"]:
+            if retention >= self.fc_config.get("min_retention_threshold", 0.1):
                 # Add retention score to memory for debugging/monitoring
                 memory["retention_score"] = retention
                 filtered_results.append(memory)
@@ -288,7 +308,7 @@ class EbbinghausMemory(Memory):
                 retention = self.calculate_retention(metadata)
                 
                 # Check if memory should be forgotten
-                if retention < self.config["min_retention_threshold"]:
+                if retention < self.fc_config.get("min_retention_threshold", 0.1):
                     memory_id = memory.get("id")
                     if memory_id:
                         if soft_delete:
@@ -360,7 +380,7 @@ class EbbinghausMemory(Memory):
                     retentions.append(retention)
                     
                     # Count weak memories
-                    if retention < self.config["min_retention_threshold"]:
+                    if retention < self.fc_config.get("min_retention_threshold", 0.1):
                         stats["weak_memories"] += 1
                     
                     # Count archived memories
