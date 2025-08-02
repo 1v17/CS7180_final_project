@@ -449,8 +449,13 @@ class EbbinghausMemory(Memory):
             
             for memory in all_memories:
                 # Check if memory is archived (soft-deleted)
+                # Check both content prefix and metadata field
                 memory_content = memory.get("memory", "")
-                is_archived = memory_content.startswith("[ARCHIVED]")
+                content_archived = memory_content.startswith("[ARCHIVED]")
+                
+                metadata = memory.get("metadata", {})
+                metadata_archived = metadata.get("archived", False)
+                is_archived = content_archived or metadata_archived
                 
                 if "metadata" not in memory:
                     stats["standard_memories"] += 1
@@ -458,23 +463,21 @@ class EbbinghausMemory(Memory):
                         stats["archived_memories"] += 1
                     continue
                 
-                metadata = memory["metadata"]
-                
                 if metadata.get("mode") == "ebbinghaus":
                     stats["ebbinghaus_memories"] += 1
                     
                     if is_archived:
                         stats["archived_memories"] += 1
-                        continue  # Skip strength/retention calculations for archived memories
                     
-                    # Track strength
+                    # Track strength (include archived memories for statistical purposes)
                     strength = metadata.get("memory_strength", 1.0)
                     strengths.append(strength)
                     
-                    # Calculate retention
+                    # Calculate retention for all ebbinghaus memories (for statistics)
                     retention = self.calculate_retention(metadata)
                     retentions.append(retention)
                     
+                    # Count weak/strong memories for all ebbinghaus memories (for statistics)
                     # Count weak memories (low retention)
                     if retention < self.fc_config.get("min_retention_threshold", 0.1):
                         stats["weak_memories"] += 1

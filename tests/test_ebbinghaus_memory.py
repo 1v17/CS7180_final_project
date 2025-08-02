@@ -7,8 +7,6 @@ strength tracking, and decay functionality.
 """
 
 import unittest
-import time
-import json
 from datetime import datetime, timezone, timedelta
 from unittest.mock import patch, MagicMock
 import sys
