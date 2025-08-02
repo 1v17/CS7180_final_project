@@ -37,9 +37,8 @@ Enhance the existing chatbot with human-like memory that naturally forgets infor
 
 ### 🚧 Remaining Phases
 - **Phase 4**: Mode-Aware Background Maintenance 🚧
-- **Phase 5**: Spaced Repetition System 🚧
-- **Phase 6**: Integration with ChatBot and Mode Control 🚧
-- **Phase 7**: Testing and Optimization 🚧
+- **Phase 5**: Integration with ChatBot and Mode Control 🚧 *(formerly Phase 6)*
+- **Phase 6**: Testing and Optimization 🚧 *(formerly Phase 7)*
 
 ### Key Achievements So Far
 
@@ -78,12 +77,6 @@ Enhance the existing chatbot with human-like memory that naturally forgets infor
 - Multiple preset configurations (default, testing, production)
 - Configuration validation and error handling
 - Mode-specific parameter management
-
-### SpacedRepetitionScheduler 🚧 PLANNED
-
-🚧 **Planned Methods:**
-- `get_next_review()`: Calculate optimal review time
-- `get_memories_for_review()`: Find memories due for review
 
 ### MemoryMaintenanceScheduler 🚧 PLANNED
 
@@ -210,21 +203,9 @@ Enhance the existing chatbot with human-like memory that naturally forgets infor
 
 **Notes**: Foundation is ready from Phase 1-3 implementation. The `MemoryConfig` class already includes `maintenance_interval` parameter for this phase.
 
-### Phase 5: Spaced Repetition System 🚧 PLANNED
+### Phase 5: Integration with ChatBot and Mode Control 🚧 PLANNED
 
-**Status**: 🚧 Not Started  
-**Goal**: Identify memories that need reinforcement
-
-**Planned Tasks:**
-1. Implement `SpacedRepetitionScheduler` class:
-   - Adjust based on memory strength
-   - Generate review reminders
-
-2. Add `get_memories_for_review()` method
-
-### Phase 6: Integration with ChatBot and Mode Control 🚧 PLANNED
-
-**Status**: 🚧 Not Started  
+**Status**: 🚧 Not Started *(formerly Phase 6)*
 **Goal**: Allow chatbot to switch memory modes
 
 **Planned Tasks:**
@@ -240,9 +221,9 @@ Enhance the existing chatbot with human-like memory that naturally forgets infor
 
 **Notes**: The `EbbinghausMemory` class already provides `get_memory_statistics()` method for detailed memory analytics that can be used in the status command.
 
-### Phase 7: Testing and Optimization 🚧 PLANNED
+### Phase 6: Testing and Optimization 🚧 PLANNED
 
-**Status**: 🚧 Not Started  
+**Status**: 🚧 Not Started *(formerly Phase 7)*
 **Goal**: Ensure system works correctly
 
 **Planned Tasks:**
@@ -250,7 +231,7 @@ Enhance the existing chatbot with human-like memory that naturally forgets infor
    - Memory decay over time
    - Retrieval strengthening
    - Forgetting process
-   - Spaced repetition scheduling
+   - Mode switching functionality
 
 2. Add monitoring and analytics
 
@@ -260,12 +241,11 @@ Enhance the existing chatbot with human-like memory that naturally forgets infor
 
 ```
 project/
-├── chatbot.py              # Existing chatbot (to be updated in Phase 6)
+├── chatbot.py              # Existing chatbot (to be updated in Phase 5)
 ├── ebbinghaus_memory.py    # ✅ Extended memory class with forgetting (COMPLETE)
 ├── memory_config.py        # ✅ Configuration settings (COMPLETE)
 ├── memory_scheduler.py     # 🚧 Background maintenance tasks (PLANNED - Phase 4)
-├── spaced_repetition.py    # 🚧 Spaced repetition logic (PLANNED - Phase 5)
-├── tests/                  # 🚧 Test infrastructure exists, tests to be written (Phase 7)
+├── tests/                  # 🚧 Test infrastructure exists, tests to be written (Phase 6)
 │   ├── __init__.py         # ✅ Created
 │   ├── test_chatbot.py     # ✅ Created (empty)
 │   ├── test_ebbinghaus_memory.py  # ✅ Created (empty)
@@ -285,6 +265,5 @@ project/
 - ✅ **ebbinghaus_memory.py**: Core implementation complete with all planned features
 - ✅ **memory_config.py**: Configuration system complete with presets and validation
 - 🚧 **memory_scheduler.py**: Not created yet (Phase 4)
-- 🚧 **spaced_repetition.py**: Not created yet (Phase 5)
-- 🚧 **Test implementations**: Files exist but tests need to be written (Phase 7)
+- 🚧 **Test implementations**: Files exist but tests need to be written (Phase 6)
 
