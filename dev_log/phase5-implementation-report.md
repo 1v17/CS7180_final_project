@@ -146,6 +146,7 @@ if self.memory_mode == "ebbinghaus":
 ```
 
 **Key Features:**
+- **API Constraint-Driven Design**: This probabilistic approach is specifically designed to work around the Mem0 API limitation where we cannot batch update or iterate through all memories for a user without explicit user context
 - **Probabilistic Forgetting**: 10% chance per interaction to trigger cleanup
 - **Soft Delete Support**: Uses `soft_delete=True` by default for memory archiving
 - **User-Specific Operations**: Forgetting operates on per-user basis
@@ -220,11 +221,6 @@ During implementation, we discovered several Mem0 API constraints that required 
   - Archived memories counted separately in `archived_memories` field
   - Weak/strong memory classification includes all memories for statistical accuracy
 - **Result**: Comprehensive memory statistics that account for all memory states
-
-**Soft Delete Implementation**
-- **Problem**: Cannot update metadata directly for archiving
-- **Solution**: Use content prefixing with `[ARCHIVED]` marker for soft deletion
-- **Result**: Full soft delete functionality with search filtering and restoration
 
 **Metadata Update Workaround**
 - **Problem**: `self.update(memory_id, metadata=metadata)` caused "unexpected keyword argument" error
@@ -309,32 +305,6 @@ memory_scheduler.py               # API constraint adaptations
 - New methods: `get_archived_memories()`, `restore_memory()`
 - Comprehensive type checking and validation
 
-## Testing and Quality Assurance
-
-### Test Coverage
-- **Unit Tests**: All individual components tested in isolation
-- **Integration Tests**: End-to-end testing of user scenarios
-- **Error Handling Tests**: Comprehensive error condition coverage
-- **Mode Switching Tests**: Verification of behavior in different modes
-
-### Test Results
-```
-test_chatbot_initialization ✅ PASS (with database lock conflict handling)
-test_command_handling        ✅ PASS  
-test_memory_integration      ✅ PASS
-test_soft_delete_functionality ✅ PASS
-test_archived_memory_statistics ✅ PASS (fixed archived memory detection and statistics)
-test_ebbinghaus_memory      ✅ PASS (24/24 tests)
-test_memory_config          ✅ PASS (8/8 tests)
-```
-
-### Updated Test Methodology
-- **Mock Strategy**: Comprehensive mocking of external dependencies
-- **API Constraint Simulation**: Tests reflect real API limitations including dictionary return formats
-- **Error Simulation**: Systematic testing of error conditions and type mismatches
-- **Database Lock Handling**: Graceful handling of concurrent access issues in testing
-- **Soft Delete Testing**: Verification of archiving and restoration functionality
-- **Performance Validation**: Tests verify non-blocking operation
 
 ## Performance and Scalability
 
