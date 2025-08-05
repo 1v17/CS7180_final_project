@@ -74,9 +74,6 @@ def main():
         print("\nAvailable commands:")
         print("  /help - Show available commands")
         print("  /memory_status - Show memory mode and statistics")
-        if memory_mode == "ebbinghaus":
-            print("  /memory_maintenance - Show maintenance scheduler status")
-            print("  /force_maintenance - Force immediate memory maintenance")
         print("  /quit or quit - Exit the chatbot\n")
         
         # Interactive chat loop

@@ -3,7 +3,6 @@ from mem0 import Memory
 from dotenv import load_dotenv
 import traceback
 from ebbinghaus_memory import EbbinghausMemory
-from memory_scheduler import MemoryMaintenanceScheduler
 from memory_config import MemoryConfig
 
 DEFAULT_MAX_NEW_TOKENS = 50
@@ -28,7 +27,6 @@ class ChatBot:
         self.model = None
         self.tokenizer = None
         self.memory = None
-        self.scheduler = None
         self.memory_mode = memory_mode
         self.config_mode = config_mode
         
@@ -38,7 +36,6 @@ class ChatBot:
         # Initialize components
         self._load_model()
         self._setup_memory()
-        self._setup_scheduler()
     
     def _load_model(self):
         """Load the local model and tokenizer."""
@@ -59,12 +56,6 @@ class ChatBot:
         
         self.memory = EbbinghausMemory(config=config, memory_mode=self.memory_mode)
         print(f"\nEbbinghaus Memory system initialized in '{self.memory_mode}' mode!")
-    
-    def _setup_scheduler(self):
-        """Set up memory maintenance scheduler."""
-        self.scheduler = MemoryMaintenanceScheduler(self.memory)
-        self.scheduler.start()
-        print("Memory maintenance scheduler started!")
     
     def chat(self, message, user_id="default_user", max_new_tokens=50):
         """
@@ -181,10 +172,6 @@ class ChatBot:
             self._show_help()
         elif command == '/memory_status':
             self._show_memory_status()
-        elif command == '/memory_maintenance':
-            self._show_maintenance_status()
-        elif command.startswith('/force_maintenance'):
-            self._force_maintenance()
         else:
             print(f"Unknown command: {command}. Type /help for available commands.")
     
@@ -193,8 +180,6 @@ class ChatBot:
         print("\nAvailable commands:")
         print("  /help - Show this help message")
         print("  /memory_status - Show current memory mode and statistics")
-        print("  /memory_maintenance - Show maintenance scheduler status (ebbinghaus mode only)")
-        print("  /force_maintenance - Force immediate memory maintenance (ebbinghaus mode only)")
         print("  /quit - Exit the chatbot")
         print()
     
@@ -244,53 +229,9 @@ class ChatBot:
         
         print()
     
-    def _show_maintenance_status(self) -> None:
-        """Show maintenance scheduler status."""
-        print(f"\n=== Maintenance Status ===")
-        
-        if self.scheduler:
-            try:
-                status = self.scheduler.get_status()
-                print(f"Scheduler Running: {status.get('is_running', False)}")
-                print(f"Mode: {status.get('memory_mode', 'N/A')}")
-                print(f"Maintenance Interval: {status.get('maintenance_interval', 'N/A')} seconds")
-                print(f"Last Maintenance: {status.get('last_maintenance', 'Never')}")
-                print(f"Maintenance Count: {status.get('maintenance_count', 0)}")
-                print(f"Error Count: {status.get('error_count', 0)}")
-            except Exception as e:
-                print(f"Error retrieving scheduler status: {e}")
-        else:
-            print("No scheduler available")
-        
-        print()
-    
-    def _force_maintenance(self) -> None:
-        """Force immediate memory maintenance."""
-        if self.memory_mode != "ebbinghaus":
-            print("Maintenance only available in 'ebbinghaus' mode")
-            return
-        
-        if not self.scheduler:
-            print("No scheduler available")
-            return
-        
-        print("Forcing memory maintenance...")
-        try:
-            result = self.scheduler.force_maintenance()
-            if result:
-                print("Maintenance completed successfully!")
-                self._show_maintenance_status()
-            else:
-                print("Maintenance failed or scheduler not running")
-        except Exception as e:
-            print(f"Error during maintenance: {e}")
-    
     def shutdown(self) -> None:
-        """Gracefully shutdown the chatbot and scheduler."""
+        """Gracefully shutdown the chatbot."""
         print("Shutting down chatbot...")
-        if self.scheduler:
-            self.scheduler.stop()
-            print("Memory scheduler stopped")
         print("Shutdown complete")
     
 

@@ -14,17 +14,15 @@ class TestChatBot(unittest.TestCase):
     
     def setUp(self):
         """Set up test fixtures before each test method."""
-        # Mock the model loading, memory setup, and scheduler setup to avoid loading actual models
+        # Mock the model loading and memory setup to avoid loading actual models
         with patch.object(ChatBot, '_load_model'), \
-             patch.object(ChatBot, '_setup_memory'), \
-             patch.object(ChatBot, '_setup_scheduler'):
+             patch.object(ChatBot, '_setup_memory'):
             self.chatbot = ChatBot()
             
-        # Mock the model, tokenizer, memory, and scheduler
+        # Mock the model, tokenizer, and memory
         self.chatbot.model = Mock()
         self.chatbot.tokenizer = Mock()
         self.chatbot.memory = Mock()
-        self.chatbot.scheduler = Mock()
         
         # Set up tokenizer mocks
         self.chatbot.tokenizer.pad_token = "[PAD]"
@@ -32,16 +30,13 @@ class TestChatBot(unittest.TestCase):
         self.chatbot.tokenizer.pad_token_id = 0
         self.chatbot.tokenizer.eos_token_id = 1
         
-        # Set up memory mode for any scheduler-related checks
+        # Set up memory mode
         self.chatbot.memory_mode = "standard"
         self.chatbot.config_mode = "default"
 
     def tearDown(self):
         """Clean up after each test method."""
-        # Ensure scheduler is properly mocked and won't cause issues
-        if hasattr(self.chatbot, 'scheduler') and self.chatbot.scheduler:
-            if hasattr(self.chatbot.scheduler, 'stop'):
-                self.chatbot.scheduler.stop = Mock()  # Mock the stop method to avoid real shutdown
+        pass
 
     def test_first_chat_hello_i_like_coffee(self):
         """Test: response1 = chatbot.chat("Hello, I like coffee")"""
@@ -130,16 +125,14 @@ class TestChatBot(unittest.TestCase):
         """Test ChatBot initialization with different memory modes."""
         # Test standard mode initialization
         with patch.object(ChatBot, '_load_model'), \
-             patch.object(ChatBot, '_setup_memory'), \
-             patch.object(ChatBot, '_setup_scheduler'):
+             patch.object(ChatBot, '_setup_memory'):
             chatbot_standard = ChatBot(memory_mode="standard", config_mode="default")
             self.assertEqual(chatbot_standard.memory_mode, "standard")
             self.assertEqual(chatbot_standard.config_mode, "default")
         
         # Test ebbinghaus mode initialization
         with patch.object(ChatBot, '_load_model'), \
-             patch.object(ChatBot, '_setup_memory'), \
-             patch.object(ChatBot, '_setup_scheduler'):
+             patch.object(ChatBot, '_setup_memory'):
             chatbot_ebbinghaus = ChatBot(memory_mode="ebbinghaus", config_mode="testing")
             self.assertEqual(chatbot_ebbinghaus.memory_mode, "ebbinghaus")
             self.assertEqual(chatbot_ebbinghaus.config_mode, "testing")
@@ -151,8 +144,6 @@ class TestChatBot(unittest.TestCase):
         # Mock the command handler methods
         self.chatbot._show_help = Mock()
         self.chatbot._show_memory_status = Mock()
-        self.chatbot._show_maintenance_status = Mock()
-        self.chatbot._force_maintenance = Mock()
         
         # Test help command
         self.chatbot.handle_command('/help')
@@ -162,28 +153,16 @@ class TestChatBot(unittest.TestCase):
         self.chatbot.handle_command('/memory_status')
         self.chatbot._show_memory_status.assert_called_once()
         
-        # Test maintenance status command
-        self.chatbot.handle_command('/memory_maintenance')
-        self.chatbot._show_maintenance_status.assert_called_once()
-        
-        # Test force maintenance command
-        self.chatbot.handle_command('/force_maintenance')
-        self.chatbot._force_maintenance.assert_called_once()
-        
         print("✓ Test 5 passed: Command handling works correctly")
 
     def test_shutdown(self):
         """Test graceful shutdown functionality."""
-        # Mock the scheduler
-        self.chatbot.scheduler = Mock()
-        
         # Test shutdown
         with patch('builtins.print'):  # Suppress print output during test
             self.chatbot.shutdown()
         
-        # Verify scheduler was stopped
-        self.chatbot.scheduler.stop.assert_called_once()
-        
+        # Verify that shutdown completes without errors (no scheduler to stop)
+        # Just make sure the method runs successfully
         print("✓ Test 6 passed: Graceful shutdown works correctly")
 
 
