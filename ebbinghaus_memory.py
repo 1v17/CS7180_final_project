@@ -7,10 +7,9 @@ Ebbinghaus forgetting curve. It provides two modes:
 - "ebbinghaus": Memory with strength tracking and decay over time
 """
 
-import time
 import math
 from datetime import datetime, timezone
-from typing import Dict, List, Any, Optional, Union
+from typing import Dict, List, Any, Optional
 from mem0 import Memory
 from mem0.configs.base import MemoryConfig as Mem0Config
 from memory_config import MemoryConfig
@@ -25,6 +24,9 @@ class EbbinghausMemory(Memory):
     - "standard": Uses default Mem0 behavior (perfect memory)
     - "ebbinghaus": Applies forgetting curve with strength metadata
     """
+    
+    # Constants for memory strength thresholds
+    STRONG_MEMORY_THRESHOLD = 0.5  # Retention threshold for strong memories
     
     def __init__(self, config: Optional[Dict] = None, memory_mode: str = "standard"):
         """
@@ -483,7 +485,7 @@ class EbbinghausMemory(Memory):
                         stats["weak_memories"] += 1
                     
                     # Count strong memories (high retention)
-                    if retention > 0.5:
+                    if retention > self.STRONG_MEMORY_THRESHOLD:
                         stats["strong_memories"] += 1
                 else:
                     stats["standard_memories"] += 1

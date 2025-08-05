@@ -207,8 +207,12 @@ class ChatBot:
                         avg_strength = stats.get('average_strength', 0.0)
                         oldest_age = stats.get('oldest_memory_age', 'N/A')
                         
-                        print(f"Strong Memories (>0.5): {strong_count}")
-                        print(f"Weak Memories (<0.3): {weak_count}")
+                        # Get the actual weak memory threshold from configuration
+                        weak_threshold = self.memory.fc_config.get("min_retention_threshold", 0.1)
+                        strong_threshold = self.memory.STRONG_MEMORY_THRESHOLD
+                        
+                        print(f"Strong Memories (>{strong_threshold}): {strong_count}")
+                        print(f"Weak Memories (<{weak_threshold}): {weak_count}")
                         print(f"Archived Memories: {archived_count}")
                         
                         if isinstance(avg_strength, (int, float)):
