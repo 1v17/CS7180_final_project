@@ -70,7 +70,6 @@ class ChatBot:
         if self.tokenizer.pad_token is None:
             self.tokenizer.pad_token = self.tokenizer.eos_token
         
-        print("\nModel loaded successfully!")
     
     def _setup_memory(self):
         """Set up Ebbinghaus memory with configuration."""
