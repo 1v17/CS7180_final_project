@@ -21,7 +21,6 @@ class MemoryConfig:
             "retrieval_boost": 0.5,         # Strength increase on retrieval
             "decay_rate": 0.5,             # Base decay rate
             "soft_delete": True,           # Archive vs delete weak memories
-            "maintenance_interval": 3600,  # Seconds between updates (1 hour)
         },
         "llm": {
             "provider": "openai",
@@ -41,7 +40,6 @@ class MemoryConfig:
             "retrieval_boost": 0.3,
             "decay_rate": 0.8,  # Faster decay for testing
             "soft_delete": True,
-            "maintenance_interval": 60,  # 1 minute for testing
         },
         "llm": {
             "provider": "openai", 
@@ -61,7 +59,6 @@ class MemoryConfig:
             "retrieval_boost": 0.5,
             "decay_rate": 0.3,  # Slower decay for production
             "soft_delete": True,
-            "maintenance_interval": 3600,  # 1 hour
         },
         "llm": {
             "provider": "openai",
@@ -98,15 +95,13 @@ class MemoryConfig:
         return config
     
     @classmethod
-    def create_ebbinghaus_config(cls, 
-                                maintenance_interval: int = 3600,
+    def create_ebbinghaus_config(cls,
                                 decay_rate: float = 0.5,
                                 min_threshold: float = 0.1) -> Dict[str, Any]:
         """
         Create configuration for Ebbinghaus memory mode.
         
         Args:
-            maintenance_interval (int): Seconds between memory updates
             decay_rate (float): Rate of memory decay
             min_threshold (float): Minimum retention to keep memory
             
@@ -116,7 +111,6 @@ class MemoryConfig:
         config = cls.DEFAULT_CONFIG.copy()
         config["memory_mode"] = "ebbinghaus"
         config["forgetting_curve"]["enabled"] = True
-        config["forgetting_curve"]["maintenance_interval"] = maintenance_interval
         config["forgetting_curve"]["decay_rate"] = decay_rate
         config["forgetting_curve"]["min_retention_threshold"] = min_threshold
         return config
@@ -151,8 +145,7 @@ class MemoryConfig:
                     "initial_strength": (0.0, 1.0),
                     "min_retention_threshold": (0.0, 1.0),
                     "retrieval_boost": (0.0, 1.0),
-                    "decay_rate": (0.0, 2.0),
-                    "maintenance_interval": (1, float('inf'))
+                    "decay_rate": (0.0, 2.0)
                 }
                 
                 for param, (min_val, max_val) in numeric_params.items():

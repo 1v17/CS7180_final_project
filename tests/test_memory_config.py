@@ -33,7 +33,6 @@ class TestMemoryConfig(unittest.TestCase):
         
         self.assertEqual(config["memory_mode"], "ebbinghaus")
         self.assertEqual(config["forgetting_curve"]["enabled"], True)
-        self.assertEqual(config["forgetting_curve"]["maintenance_interval"], 60)
     
     def test_get_production_config(self):
         """Test getting production configuration"""
@@ -41,7 +40,6 @@ class TestMemoryConfig(unittest.TestCase):
         
         self.assertEqual(config["memory_mode"], "ebbinghaus")
         self.assertEqual(config["forgetting_curve"]["enabled"], True)
-        self.assertEqual(config["forgetting_curve"]["maintenance_interval"], 3600)
     
     def test_create_standard_config(self):
         """Test creating standard configuration"""
@@ -53,14 +51,12 @@ class TestMemoryConfig(unittest.TestCase):
     def test_create_ebbinghaus_config(self):
         """Test creating ebbinghaus configuration"""
         config = MemoryConfig.create_ebbinghaus_config(
-            maintenance_interval=120,
             decay_rate=0.3,
             min_threshold=0.2
         )
         
         self.assertEqual(config["memory_mode"], "ebbinghaus")
         self.assertEqual(config["forgetting_curve"]["enabled"], True)
-        self.assertEqual(config["forgetting_curve"]["maintenance_interval"], 120)
         self.assertEqual(config["forgetting_curve"]["decay_rate"], 0.3)
         self.assertEqual(config["forgetting_curve"]["min_retention_threshold"], 0.2)
     

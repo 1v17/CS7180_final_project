@@ -217,7 +217,6 @@ python -m pytest tests/test_ebbinghaus_memory.py -v
         "min_retention_threshold": 0.2,
         "retrieval_boost": 0.3,
         "decay_rate": 0.8,  # Fast decay
-        "maintenance_interval": 60  # 1 minute
     }
 }
 ```
@@ -231,7 +230,6 @@ python -m pytest tests/test_ebbinghaus_memory.py -v
         "min_retention_threshold": 0.1,
         "retrieval_boost": 0.5,
         "decay_rate": 0.3,  # Slower decay
-        "maintenance_interval": 3600  # 1 hour
     }
 }
 ```
