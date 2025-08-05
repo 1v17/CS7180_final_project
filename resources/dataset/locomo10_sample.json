@@ -1,0 +1,425 @@
+[
+  {
+    "qa": [
+      {
+        "question": "When did Caroline lose her job?",
+        "answer": "May 15, 2023",
+        "evidence": [
+          "D2:8"
+        ],
+        "category": 2
+      },
+      {
+        "question": "When did Melanie finish her first novel?",
+        "answer": "June 10, 2023",
+        "evidence": [
+          "D3:12"
+        ],
+        "category": 2
+      },
+      {
+        "question": "What is Caroline's favorite type of art?",
+        "answer": "Abstract expressionism",
+        "evidence": [
+          "D1:15"
+        ],
+        "category": 4
+      },
+      {
+        "question": "What is Melanie's dream job?",
+        "answer": "To become a published novelist",
+        "evidence": [
+          "D1:7"
+        ],
+        "category": 4
+      },
+      {
+        "question": "When did Caroline start her art therapy sessions?",
+        "answer": "July 2023",
+        "evidence": [
+          "D4:3"
+        ],
+        "category": 2
+      },
+      {
+        "question": "What book genre does Melanie prefer to write?",
+        "answer": "Mystery and psychological thrillers",
+        "evidence": [
+          "D2:14"
+        ],
+        "category": 4
+      },
+      {
+        "question": "When did Caroline have her first art exhibition?",
+        "answer": "August 20, 2023",
+        "evidence": [
+          "D5:6"
+        ],
+        "category": 2
+      },
+      {
+        "question": "What inspired Melanie to write her novel?",
+        "answer": "Her grandmother's stories about family secrets",
+        "evidence": [
+          "D3:8"
+        ],
+        "category": 4
+      },
+      {
+        "question": "How do Caroline and Melanie support each other?",
+        "answer": "Through regular check-ins and creative collaboration",
+        "evidence": [
+          "D1:22",
+          "D6:15"
+        ],
+        "category": 1
+      },
+      {
+        "question": "When did Melanie get her book deal?",
+        "answer": "September 5, 2023",
+        "evidence": [
+          "D6:2"
+        ],
+        "category": 2
+      }
+    ],
+    "conversation": {
+      "speaker_a": "Caroline",
+      "speaker_b": "Melanie",
+      "session_1_date_time": "2:30 pm on 12 May, 2023",
+      "session_1": [
+        {
+          "speaker": "Caroline",
+          "dia_id": "D1:1",
+          "text": "Hi Melanie! It's been way too long since we last caught up. How are you doing?"
+        },
+        {
+          "speaker": "Melanie",
+          "dia_id": "D1:2",
+          "text": "Caroline! So good to hear from you! I'm doing well, just been buried in my writing lately."
+        },
+        {
+          "speaker": "Caroline",
+          "dia_id": "D1:3",
+          "text": "That's amazing! Are you still working on that novel you mentioned?"
+        },
+        {
+          "speaker": "Melanie",
+          "dia_id": "D1:4",
+          "text": "Yes! It's been quite a journey. Some days the words flow, other days I stare at a blank page."
+        },
+        {
+          "speaker": "Caroline",
+          "dia_id": "D1:5",
+          "text": "I totally understand that feeling. As an artist, I have those same creative blocks."
+        },
+        {
+          "speaker": "Melanie",
+          "dia_id": "D1:6",
+          "text": "Exactly! How's your art going? Still painting those beautiful abstracts?"
+        },
+        {
+          "speaker": "Caroline",
+          "dia_id": "D1:7",
+          "text": "Yes, still exploring abstract expressionism. It helps me process emotions."
+        },
+        {
+          "speaker": "Melanie",
+          "dia_id": "D1:8",
+          "text": "That's wonderful. Art as therapy is so powerful."
+        }
+      ]
+    },
+    "event_summary": {
+      "events_session_1": {
+        "Caroline": [
+          "Caroline reconnects with Melanie after a long time."
+        ],
+        "Melanie": [
+          "Melanie continues working on her novel."
+        ],
+        "date": "12 May, 2023"
+      }
+    },
+    "observation": {
+      "session_1_observation": {
+        "Caroline": [
+          [
+            "Caroline is an artist who creates abstract expressionist paintings.",
+            "D1:7"
+          ],
+          [
+            "Caroline uses art to process emotions.",
+            "D1:7"
+          ]
+        ],
+        "Melanie": [
+          [
+            "Melanie is working on writing a novel.",
+            "D1:4"
+          ],
+          [
+            "Melanie experiences creative blocks in her writing process.",
+            "D1:4"
+          ]
+        ]
+      }
+    },
+    "session_summary": {
+      "session_1_summary": "Caroline and Melanie reconnected at 2:30 pm on 12 May, 2023, after not speaking for a while. They discussed their creative pursuits - Melanie shared about her novel writing journey, including the challenges of writer's block, while Caroline talked about her abstract expressionist paintings and how art helps her process emotions. They both related to experiencing creative blocks in their respective artistic endeavors."
+    },
+    "sample_id": "conv-26"
+  },
+  {
+    "qa": [
+      {
+        "question": "When Jon has lost his job as a banker?",
+        "answer": "19 January, 2023",
+        "evidence": [
+          "D1:2"
+        ],
+        "category": 2
+      },
+      {
+        "question": "When Gina has lost her job at Door Dash?",
+        "answer": "January, 2023",
+        "evidence": [
+          "D1:3"
+        ],
+        "category": 2
+      },
+      {
+        "question": "How do Jon and Gina both like to destress?",
+        "answer": "by dancing",
+        "evidence": [
+          "D1:7",
+          "D1:6"
+        ],
+        "category": 4
+      },
+      {
+        "question": "What do Jon and Gina both have in common?",
+        "answer": "They lost their jobs and decided to start their own businesses.",
+        "evidence": [
+          "D1:2",
+          "D1:3",
+          "D1:4",
+          "D2:1"
+        ],
+        "category": 1
+      },
+      {
+        "question": "Why did Jon decide to start his dance studio?",
+        "answer": "He lost his job and decided to start his own business to share his passion.",
+        "evidence": [
+          "D1:2",
+          "D1:4"
+        ],
+        "category": 4
+      },
+      {
+        "question": "What Jon thinks the ideal dance studio should look like?",
+        "answer": "By the water, with natural light and Marley flooring",
+        "evidence": [
+          "D1:20",
+          "D2:4",
+          "D2:8"
+        ],
+        "category": 1
+      },
+      {
+        "question": "When is Jon's group performing at a festival?",
+        "answer": "February, 2023",
+        "evidence": [
+          "D1:24"
+        ],
+        "category": 2
+      },
+      {
+        "question": "When did Gina launch an ad campaign for her store?",
+        "answer": "29 January, 2023",
+        "evidence": [
+          "D2:1"
+        ],
+        "category": 2
+      },
+      {
+        "question": "When was Jon in Paris?",
+        "answer": "28 January 2023",
+        "evidence": [
+          "D2:4"
+        ],
+        "category": 2
+      },
+      {
+        "question": "Which city have both Jean and John visited?",
+        "answer": "Rome",
+        "evidence": [
+          "D2:5",
+          "D15:1"
+        ],
+        "category": 1
+      }
+    ],
+    "conversation": {
+      "speaker_a": "Jon",
+      "speaker_b": "Gina",
+      "session_1_date_time": "4:04 pm on 20 January, 2023",
+      "session_1": [
+        {
+          "speaker": "Gina",
+          "dia_id": "D1:1",
+          "text": "Hey Jon! Good to see you. What's up? Anything new?"
+        },
+        {
+          "speaker": "Jon",
+          "dia_id": "D1:2",
+          "text": "Hey Gina! Good to see you too. Lost my job as a banker yesterday, so I'm gonna take a shot at starting my own business."
+        },
+        {
+          "speaker": "Gina",
+          "dia_id": "D1:3",
+          "text": "Sorry about your job Jon, but starting your own business sounds awesome! Unfortunately, I also lost my job at Door Dash this month. What business are you thinking of?"
+        },
+        {
+          "speaker": "Jon",
+          "dia_id": "D1:4",
+          "text": "Sorry to hear that! I'm starting a dance studio 'cause I'm passionate about dancing and it'd be great to share it with others."
+        },
+        {
+          "speaker": "Gina",
+          "dia_id": "D1:5",
+          "text": "That's cool, Jon! What got you into this biz?"
+        },
+        {
+          "speaker": "Jon",
+          "dia_id": "D1:6",
+          "text": "I've been into dancing since I was a kid and it's been my passion and escape. I wanna start a dance studio so I can teach others the joy that dancing brings me."
+        },
+        {
+          "speaker": "Gina",
+          "dia_id": "D1:7",
+          "text": "Wow Jon, same here! Dance is pretty much my go-to for stress relief. Got any fave styles?"
+        },
+        {
+          "speaker": "Jon",
+          "dia_id": "D1:8",
+          "text": "Cool, Gina! I love all dances, but contemporary is my top pick. It's so expressive and powerful! What's your fave?"
+        },
+        {
+          "speaker": "Gina",
+          "dia_id": "D1:9",
+          "text": "Yeah, me too! Contemporary dance is so expressive and graceful - it really speaks to me."
+        }
+      ],
+      "session_2_date_time": "2:32 pm on 29 January, 2023",
+      "session_2": [
+        {
+          "speaker": "Gina",
+          "dia_id": "D2:1",
+          "text": "Hey Jon! Long time no see! Things have been hectic lately. I just launched an ad campaign for my clothing store in hopes of growing the business. Starting my own store and taking risks is both scary and rewarding. I'm excited to see where it takes me!"
+        },
+        {
+          "speaker": "Jon",
+          "dia_id": "D2:2",
+          "text": "Hey Gina! Whoa, your store looks great! All your hard work really paid off - congrats! Must be awesome to see your stuff on display."
+        },
+        {
+          "speaker": "Gina",
+          "dia_id": "D2:3",
+          "text": "Thanks a bunch! It's awesome seeing my vision happen. How's the dance studio going? Did you find the right spot?"
+        },
+        {
+          "speaker": "Jon",
+          "dia_id": "D2:4",
+          "text": "Hey Gina! Thanks for asking. I'm on the hunt for the ideal spot for my dance studio and it's been quite a journey! I've been looking at different places and picturing how the space would look. I even found a place with great natural light! Oh, I've been to Paris yesterday! It was sooo cool."
+        },
+        {
+          "speaker": "Gina",
+          "dia_id": "D2:5",
+          "text": "Wow, nice spot! Where is it? Got any other features you want to think about before you decide? Paris?! That is really great Jon! Never had a chance to visit it. Been only to Rome once."
+        }
+      ]
+    },
+    "event_summary": {
+      "events_session_1": {
+        "Jon": [
+          "Jon loses his job as a banker.",
+          "Jon begins planning for his own business venture."
+        ],
+        "Gina": [
+          "Gina loses her job at Door Dash."
+        ],
+        "date": "20 January, 2023"
+      },
+      "events_session_2": {
+        "Jon": [
+          "Jon returns from a trip to Paris."
+        ],
+        "Gina": [
+          "Gina orders advertising to promote her store."
+        ],
+        "date": "29 January, 2023"
+      }
+    },
+    "observation": {
+      "session_1_observation": {
+        "Gina": [
+          [
+            "Gina lost her job at Door Dash during the month of the conversation.",
+            "D1:3"
+          ],
+          [
+            "Gina's favorite dance style is contemporary.",
+            "D1:9"
+          ]
+        ],
+        "Jon": [
+          [
+            "Jon lost his job as a banker the day before the conversation.",
+            "D1:2"
+          ],
+          [
+            "Jon is starting his own dance studio due to his passion for dancing.",
+            "D1:4"
+          ],
+          [
+            "Jon's favorite dance style is contemporary.",
+            "D1:8"
+          ]
+        ]
+      },
+      "session_2_observation": {
+        "Gina": [
+          [
+            "Gina launched an ad campaign for her clothing store in hopes of growing the business.",
+            "D2:1"
+          ],
+          [
+            "Gina started her own clothing store and finds taking risks scary but rewarding.",
+            "D2:1"
+          ],
+          [
+            "Gina has been to Rome once.",
+            "D2:5"
+          ]
+        ],
+        "Jon": [
+          [
+            "Jon is looking for the ideal spot for his dance studio and is considering features like size, natural light, and flooring.",
+            "D2:4"
+          ],
+          [
+            "Jon visited Paris recently",
+            "D2:4"
+          ]
+        ]
+      }
+    },
+    "session_summary": {
+      "session_1_summary": "Gina and Jon met at 4:04 pm on 20 January, 2023. Jon lost his job as a banker and planned to start a dance studio because of his passion for dancing. Gina also lost her job at Door Dash. They both shared a love for dance, with contemporary being both their favorite style. They discussed their mutual passion for dance as a form of stress relief and expression.",
+      "session_2_summary": "Gina and Jon had a conversation at 2:32 pm on 29 January, 2023. Gina mentioned launching an ad campaign for her clothing store, excited about the risks and rewards of her business. Jon complimented her hard work and discussed his search for a suitable location for his dance studio, mentioning finding a spot with great natural light and his recent trip to Paris. Gina shared that she had visited Rome in the past."
+    },
+    "sample_id": "conv-30"
+  }
+]

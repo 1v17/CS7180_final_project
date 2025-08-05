@@ -5,3 +5,6 @@ mem0ai==0.1.115
 huggingface_hub==0.34.3
 dotenv==0.9.9
 accelerate==1.9.0
+pandas==2.3.1
+matplotlib==3.10.5
+seaborn==0.13.2
