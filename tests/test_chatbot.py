@@ -19,7 +19,7 @@ class TestChatBot(unittest.TestCase):
              patch.object(ChatBot, '_setup_memory'):
             self.chatbot = ChatBot()
             
-        # Mock the model and tokenizer
+        # Mock the model, tokenizer, and memory
         self.chatbot.model = Mock()
         self.chatbot.tokenizer = Mock()
         self.chatbot.memory = Mock()
@@ -29,6 +29,14 @@ class TestChatBot(unittest.TestCase):
         self.chatbot.tokenizer.eos_token = "[EOS]"
         self.chatbot.tokenizer.pad_token_id = 0
         self.chatbot.tokenizer.eos_token_id = 1
+        
+        # Set up memory mode
+        self.chatbot.memory_mode = "standard"
+        self.chatbot.config_mode = "default"
+
+    def tearDown(self):
+        """Clean up after each test method."""
+        pass
 
     def test_first_chat_hello_i_like_coffee(self):
         """Test: response1 = chatbot.chat("Hello, I like coffee")"""
@@ -45,8 +53,10 @@ class TestChatBot(unittest.TestCase):
         self.chatbot.model.generate.return_value = [[0] * 12]
         self.chatbot.tokenizer.decode.return_value = "Nice to meet you! I'll remember that you like coffee."
         
-        # Test the chat method
-        response = self.chatbot.chat("Hello, I like coffee")
+        # Mock random for periodic forgetting to avoid randomness in tests
+        with patch('random.random', return_value=0.5):  # Return value > 0.1 to avoid forgetting
+            # Test the chat method
+            response = self.chatbot.chat("Hello, I like coffee")
         
         # Assertions
         self.assertIsInstance(response, str)
@@ -74,8 +84,10 @@ class TestChatBot(unittest.TestCase):
         self.chatbot.model.generate.return_value = [[0] * 15]
         self.chatbot.tokenizer.decode.return_value = "Based on our conversation, you like coffee!"
         
-        # Test the chat method
-        response = self.chatbot.chat("What do I like to drink?")
+        # Mock random for periodic forgetting to avoid randomness in tests
+        with patch('random.random', return_value=0.5):  # Return value > 0.1 to avoid forgetting
+            # Test the chat method
+            response = self.chatbot.chat("What do I like to drink?")
         
         # Assertions
         self.assertIsInstance(response, str)
@@ -108,6 +120,50 @@ class TestChatBot(unittest.TestCase):
             self.assertIn('memory', memory)
             
         print(f"✓ Test 3 passed: Retrieved {len(memories)} memories for 'drink'")
+
+    def test_chatbot_initialization_with_modes(self):
+        """Test ChatBot initialization with different memory modes."""
+        # Test standard mode initialization
+        with patch.object(ChatBot, '_load_model'), \
+             patch.object(ChatBot, '_setup_memory'):
+            chatbot_standard = ChatBot(memory_mode="standard", config_mode="default")
+            self.assertEqual(chatbot_standard.memory_mode, "standard")
+            self.assertEqual(chatbot_standard.config_mode, "default")
+        
+        # Test ebbinghaus mode initialization
+        with patch.object(ChatBot, '_load_model'), \
+             patch.object(ChatBot, '_setup_memory'):
+            chatbot_ebbinghaus = ChatBot(memory_mode="ebbinghaus", config_mode="testing")
+            self.assertEqual(chatbot_ebbinghaus.memory_mode, "ebbinghaus")
+            self.assertEqual(chatbot_ebbinghaus.config_mode, "testing")
+        
+        print("✓ Test 4 passed: ChatBot initialization with different modes")
+
+    def test_command_handling(self):
+        """Test command handling functionality."""
+        # Mock the command handler methods
+        self.chatbot._show_help = Mock()
+        self.chatbot._show_memory_status = Mock()
+        
+        # Test help command
+        self.chatbot.handle_command('/help')
+        self.chatbot._show_help.assert_called_once()
+        
+        # Test memory status command
+        self.chatbot.handle_command('/memory_status')
+        self.chatbot._show_memory_status.assert_called_once()
+        
+        print("✓ Test 5 passed: Command handling works correctly")
+
+    def test_shutdown(self):
+        """Test graceful shutdown functionality."""
+        # Test shutdown
+        with patch('builtins.print'):  # Suppress print output during test
+            self.chatbot.shutdown()
+        
+        # Verify that shutdown completes without errors (no scheduler to stop)
+        # Just make sure the method runs successfully
+        print("✓ Test 6 passed: Graceful shutdown works correctly")
 
 
 if __name__ == '__main__':
