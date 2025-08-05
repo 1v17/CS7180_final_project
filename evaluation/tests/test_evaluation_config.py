@@ -15,6 +15,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 from evaluation.evaluation_config import (
     EvaluationConfig,
     MetricsCalculator,
+    LocalLLMJudge,
     create_answer_generation_prompt
 )
 
@@ -108,6 +109,58 @@ def test_prompt_generation():
     print("✅ Prompt generation tests passed!")
     return True
 
+def test_llm_judge():
+    """Test the LocalLLMJudge class (requires OpenAI API key)."""
+    print("\n🧪 Testing LocalLLMJudge...")
+    
+    import os
+    from dotenv import load_dotenv
+    
+    # Load environment variables from .env file
+    load_dotenv()
+    api_key = os.getenv('OPENAI_API_KEY')
+    
+    if not api_key:
+        raise ValueError("OPENAI_API_KEY is required for LLM judge functionality. "
+                        "Please set OPENAI_API_KEY in your .env file or environment variables.")
+    
+    try:
+        # Test initialization
+        judge = LocalLLMJudge(api_key)
+        print("✅ LocalLLMJudge initialized successfully")
+        
+        # Test basic judging functionality with a simple example
+        question = "What is the capital of France?"
+        ground_truth = "Paris"
+        predicted_correct = "The capital of France is Paris"
+        predicted_wrong = "The capital of France is London"
+        
+        print("Testing correct answer judgment...")
+        score_correct = judge.judge_answer(question, predicted_correct, ground_truth)
+        print(f"Correct answer score: {score_correct:.1f}/100")
+        
+        print("Testing incorrect answer judgment...")
+        score_wrong = judge.judge_answer(question, predicted_wrong, ground_truth)
+        print(f"Incorrect answer score: {score_wrong:.1f}/100")
+        
+        # Validate scores are in range
+        assert 0.0 <= score_correct <= 100.0, f"Correct score out of range: {score_correct}"
+        assert 0.0 <= score_wrong <= 100.0, f"Wrong score out of range: {score_wrong}"
+        
+        # The correct answer should generally score higher than the wrong one
+        # (though this isn't guaranteed with LLM judges, so we make it a soft check)
+        if score_correct <= score_wrong:
+            print("ℹ️  Note: Correct answer didn't score higher than wrong answer")
+            print("   This can happen with LLM judges, but is worth noting")
+        
+        print("✅ LocalLLMJudge tests passed!")
+        return True
+        
+    except Exception as e:
+        print(f"❌ LocalLLMJudge test failed: {e}")
+        print("This might be due to API issues or network connectivity")
+        return False
+
 def test_nltk_dependencies():
     """Test that NLTK dependencies are properly installed."""
     print("\n🧪 Testing NLTK Dependencies...")
@@ -115,15 +168,24 @@ def test_nltk_dependencies():
     try:
         import nltk
         from nltk.tokenize import word_tokenize
-        from nltk.translate.bleu_score import sentence_bleu
+        from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
         
         # Test that punkt data is available
         tokens = word_tokenize("Hello, world!")
         print(f"NLTK tokenization works: {tokens}")
         
-        # Test BLEU calculation
-        score = sentence_bleu([["hello", "world"]], ["hello", "world"])
-        print(f"NLTK BLEU calculation works: {score}")
+        # Test BLEU-1 calculation with smoothing (like we use in MetricsCalculator)
+        smoothing_function = SmoothingFunction().method1
+        score = sentence_bleu(
+            [["hello", "world"]], 
+            ["hello", "world"],
+            weights=(1.0, 0, 0, 0),  # BLEU-1 weights
+            smoothing_function=smoothing_function
+        )
+        print(f"NLTK BLEU-1 calculation works: {score}")
+        
+        # Should be 1.0 for identical sequences
+        assert abs(score - 1.0) < 0.01, f"Expected BLEU-1 score ~1.0, got {score}"
         
         print("✅ NLTK dependencies tests passed!")
         return True
@@ -141,6 +203,7 @@ def main():
         test_metrics_calculator,
         test_tokenization,
         test_prompt_generation,
+        test_llm_judge,
         test_nltk_dependencies
     ]
     

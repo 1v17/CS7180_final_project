@@ -14,6 +14,8 @@ from nltk.translate.bleu_score import SmoothingFunction
 from nltk.tokenize import word_tokenize
 import logging
 
+JUDGE_MODEL = "gpt-4o-mini"  # Default model for LLM judge
+
 # Download required NLTK data if not present
 try:
     nltk.data.find('tokenizers/punkt')
@@ -182,17 +184,26 @@ class MetricsCalculator:
 
 
 class LocalLLMJudge:
-    """LLM-as-a-judge implementation using the existing ChatBot."""
+    """LLM-as-a-judge implementation using OpenAI's GPT-4o-mini."""
     
-    def __init__(self, chatbot):
+    def __init__(self, api_key: str = None):
         """
-        Initialize the judge with a ChatBot instance.
+        Initialize the judge with OpenAI API.
         
         Args:
-            chatbot: Instance of your existing ChatBot class
+            api_key (str, optional): OpenAI API key. If None, will use OPENAI_API_KEY env var
         """
-        self.chatbot = chatbot
-        self.judge_user_id = "llm_judge_evaluation"
+        import os
+        from openai import OpenAI
+        from dotenv import load_dotenv
+
+        load_dotenv()
+        self.api_key = api_key or os.getenv('OPENAI_API_KEY')
+        if not self.api_key:
+            raise ValueError("OpenAI API key is required. Set OPENAI_API_KEY environment variable or pass api_key parameter.")
+        
+        self.client = OpenAI(api_key=self.api_key)
+        self.model = JUDGE_MODEL
     
     def judge_answer(self, question: str, predicted: str, ground_truth: str) -> float:
         """
@@ -209,15 +220,20 @@ class LocalLLMJudge:
         try:
             judge_prompt = self._create_judge_prompt(question, predicted, ground_truth)
             
-            # Use ChatBot to generate judgment
-            response = self.chatbot.chat(
-                judge_prompt, 
-                user_id=self.judge_user_id,
-                max_new_tokens=10
+            # Use OpenAI API to generate judgment
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": "You are an expert evaluator. Respond only with a numeric score between 1 and 100."},
+                    {"role": "user", "content": judge_prompt}
+                ],
+                max_tokens=10,
+                temperature=0.0
             )
             
             # Extract numeric score from response
-            score = self._extract_score(response)
+            response_text = response.choices[0].message.content.strip()
+            score = self._extract_score(response_text)
             return score
             
         except Exception as e:
@@ -313,12 +329,12 @@ Answer:"""
     return prompt
 
 
-def judge_answer_with_chatbot(chatbot, question: str, predicted: str, ground_truth: str) -> float:
+def judge_answer_with_chatbot(api_key: str, question: str, predicted: str, ground_truth: str) -> float:
     """
-    Standalone function to judge an answer using a ChatBot instance.
+    Standalone function to judge an answer using OpenAI's GPT-4o-mini.
     
     Args:
-        chatbot: ChatBot instance for judging
+        api_key (str): OpenAI API key
         question (str): Original question
         predicted (str): Generated answer
         ground_truth (str): Ground truth answer
@@ -326,5 +342,5 @@ def judge_answer_with_chatbot(chatbot, question: str, predicted: str, ground_tru
     Returns:
         float: Score between 0 and 100
     """
-    judge = LocalLLMJudge(chatbot)
+    judge = LocalLLMJudge(api_key)
     return judge.judge_answer(question, predicted, ground_truth)
