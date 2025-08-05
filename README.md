@@ -85,7 +85,7 @@ OPENAI_API_KEY=your_openai_api_key_here
 - **OpenAI API Key** (Required): Used by Mem0 for memory operations. Get one from [OpenAI's website](https://platform.openai.com/api-keys)
 - **OpenRouter API Key** (Optional): Alternative API provider. Get one from [OpenRouter's website](https://openrouter.ai/keys)
 
-> **Note**: At minimum, you need an OpenAI API key for the memory system to function properly.
+> **Note**: At minimum, you need an OpenAI API key for the memory system to function properly. The OpenRouter API key is also specified but not currently used in this implementation - it's available because the Mem0 package uses an LLM to manage memory operations and supports OpenRouter models as an alternative to OpenAI.
 
 ### Step 5: Download the Default Model
 
