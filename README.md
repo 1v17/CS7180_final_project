@@ -169,11 +169,12 @@ To use a different model, please follow the steps:
 
 1. Place your model files in a new folder under `./models/`
 2. Ensure the model is compatible with Hugging Face transformers
-3. Update the model path in `main.py`:
+3. **Important**: The folder name must look like a valid Hugging Face repository ID (e.g., `microsoft-DialoGPT-medium`, `my-custom-model`, etc.) because the Hugging Face library validates local paths as if they were Hub repository IDs, even when `local_files_only=True` is specified.
+4. Update the model path in `main.py`:
 
 ```python
 chatbot = ChatBot(
-    model_path="./models/your_new_model_name", 
+    model_path="./models/mymodel", 
     memory_mode=memory_mode, 
     config_mode=config_mode
 )
