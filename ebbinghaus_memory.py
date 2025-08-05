@@ -38,9 +38,12 @@ class EbbinghausMemory(Memory):
         """
         # Set up environment for mem0
         import os
+        from dotenv import load_dotenv
+        load_dotenv()  # Load environment variables from .env file
         if not os.environ.get('OPENAI_API_KEY'):
-            os.environ['OPENAI_API_KEY'] = 'dummy-key-for-testing'
-        
+            raise ValueError("OPENAI_API_KEY is required for EbbinghausMemory functionality."
+            " Please set OPENAI_API_KEY in your .env file or environment variables.")
+
         # Get our Ebbinghaus configuration
         if config:
             self.ebbinghaus_config = config
