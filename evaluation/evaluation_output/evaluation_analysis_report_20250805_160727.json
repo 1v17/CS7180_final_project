@@ -1,0 +1,62 @@
+{
+  "timestamp": "2025-08-05 16:07:27",
+  "dataset_info": {
+    "dataset_filename": "locomo10_sample.json",
+    "total_conversations": 1,
+    "total_questions": 10,
+    "average_questions_per_conversation": 10.0,
+    "memory_modes_evaluated": [
+      "standard"
+    ],
+    "scipy_available": true
+  },
+  "memory_mode_stats": {
+    "standard": {
+      "memory_mode": "standard",
+      "total_questions": 10,
+      "successful_evaluations": 10,
+      "failed_evaluations": 0,
+      "success_rate": 1.0,
+      "avg_f1_score": 0.0,
+      "std_f1_score": 0.0,
+      "avg_bleu_1_score": 0.0,
+      "std_bleu_1_score": 0.0,
+      "avg_llm_judge_score": 0.0,
+      "std_llm_judge_score": 0.0,
+      "avg_generation_time": 7.2881505489349365,
+      "std_generation_time": 2.354767492734201,
+      "avg_memory_search_time": 0.2513866901397705,
+      "std_memory_search_time": 0.0893230120796575,
+      "median_f1_score": 0.0,
+      "median_bleu_1_score": 0.0,
+      "median_llm_judge_score": 0.0,
+      "conversation_count": 1,
+      "avg_questions_per_conversation": 10.0
+    }
+  },
+  "comparisons": [],
+  "summary": {
+    "memory_modes_count": 1,
+    "comparisons_count": 0,
+    "best_performing_mode": {
+      "f1_score": {
+        "mode": "standard",
+        "score": 0.0
+      },
+      "bleu_1_score": {
+        "mode": "standard",
+        "score": 0.0
+      },
+      "llm_judge_score": {
+        "mode": "standard",
+        "score": 0.0
+      }
+    },
+    "performance_improvements": [],
+    "statistical_significance": {}
+  },
+  "recommendations": [
+    "🔬 **Small sample size**: Consider evaluating on more questions (current: 10) for more robust statistical conclusions.",
+    "🔮 **Future work**: Consider evaluating on larger datasets, different question types, and longer conversation histories for comprehensive analysis."
+  ]
+}
