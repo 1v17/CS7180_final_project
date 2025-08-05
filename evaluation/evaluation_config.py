@@ -183,7 +183,7 @@ class MetricsCalculator:
         return tokens
 
 
-class LocalLLMJudge:
+class LLMJudge:
     """LLM-as-a-judge implementation using OpenAI's GPT-4o-mini."""
     
     def __init__(self, api_key: str = None):
@@ -342,5 +342,5 @@ def judge_answer_with_chatbot(api_key: str, question: str, predicted: str, groun
     Returns:
         float: Score between 0 and 100
     """
-    judge = LocalLLMJudge(api_key)
+    judge = LLMJudge(api_key)
     return judge.judge_answer(question, predicted, ground_truth)

@@ -11,7 +11,7 @@ This plan creates an evaluation system to compare your Ebbinghaus forgetting cur
 **Key Components**:
 - `EvaluationConfig` class with dataset paths and local model settings
 - `MetricsCalculator` class with F1, BLEU-1 calculation methods
-- `LocalLLMJudge` class using your existing ChatBot for evaluation
+- `LLMJudge` class using GPT-4o-mini for evaluation
 - OPENAI_API_KEY is in the .env file 
 
 **Key Settings**:
@@ -135,7 +135,7 @@ ebbinghaus_chatbot = ChatBot(
 1. Create `evaluation_config.py`
 2. Implement `EvaluationConfig` dataclass with settings that match your ChatBot
 3. Add `MetricsCalculator` with F1 and BLEU-1 methods
-4. Add `LocalLLMJudge` class that uses your ChatBot for evaluation
+4. Add `LLMJudge` class that uses GPT-4o-mini for evaluation
 5. Configure for your existing model path and settings
 
 **Key Methods for ChatBot Integration**:

@@ -15,7 +15,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 from evaluation.evaluation_config import (
     EvaluationConfig,
     MetricsCalculator,
-    LocalLLMJudge,
+    LLMJudge,
     create_answer_generation_prompt
 )
 
@@ -110,8 +110,8 @@ def test_prompt_generation():
     return True
 
 def test_llm_judge():
-    """Test the LocalLLMJudge class (requires OpenAI API key)."""
-    print("\n🧪 Testing LocalLLMJudge...")
+    """Test the LLMJudge class (requires OpenAI API key)."""
+    print("\n🧪 Testing LLMJudge...")
     
     import os
     from dotenv import load_dotenv
@@ -126,8 +126,8 @@ def test_llm_judge():
     
     try:
         # Test initialization
-        judge = LocalLLMJudge(api_key)
-        print("✅ LocalLLMJudge initialized successfully")
+        judge = LLMJudge(api_key)
+        print("✅ LLMJudge initialized successfully")
         
         # Test basic judging functionality with a simple example
         question = "What is the capital of France?"
@@ -153,11 +153,11 @@ def test_llm_judge():
             print("ℹ️  Note: Correct answer didn't score higher than wrong answer")
             print("   This can happen with LLM judges, but is worth noting")
         
-        print("✅ LocalLLMJudge tests passed!")
+        print("✅ LLMJudge tests passed!")
         return True
         
     except Exception as e:
-        print(f"❌ LocalLLMJudge test failed: {e}")
+        print(f"❌ LLMJudge test failed: {e}")
         print("This might be due to API issues or network connectivity")
         return False
 
