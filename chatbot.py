@@ -10,6 +10,7 @@ RELEVANT_MEMORIES_LIMIT = 3
 INPUT_MAX_LENGTH = 512
 OUTPUT_TEMPORARY = 0.7
 OUTPUT_TOP_P = 0.9
+FORGETTING_PROBABILITY = 0.1  # 10% chance to trigger forgetting process
 
 class ChatBot:
     """A chatbot that combines local LLM with Ebbinghaus memory capabilities."""
@@ -122,7 +123,7 @@ class ChatBot:
             try:
                 # Trigger forgetting occasionally (every ~10 interactions per user)
                 import random
-                if random.random() < 0.1:  # 10% chance
+                if random.random() < FORGETTING_PROBABILITY:  # Configurable chance
                     forgetting_results = self.memory.forget_weak_memories(user_id=user_id)
                     if forgetting_results.get('forgotten', 0) > 0:
                         print(f"[Memory] Forgot {forgetting_results['forgotten']} weak memories")
