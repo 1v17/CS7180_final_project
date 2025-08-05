@@ -71,7 +71,7 @@ def main():
         # Test model loading and memory setup: using ./models/test_local_model
         # chatbot = ChatBot(memory_mode=memory_mode, config_mode=config_mode)
         # Uncomment the line below to specify a custom model path
-        chatbot = ChatBot(model_path="./models/fine-tuned-model", 
+        chatbot = ChatBot(model_path="./models/mymodel", 
                           memory_mode=memory_mode, config_mode=config_mode)
         
         print("\nChatBot ready! Type 'quit' to exit.")

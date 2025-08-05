@@ -1,7 +1,5 @@
 from transformers import AutoModelForCausalLM, AutoTokenizer
-from mem0 import Memory
 from dotenv import load_dotenv
-import traceback
 from ebbinghaus_memory import EbbinghausMemory
 from memory_config import MemoryConfig
 
@@ -41,8 +39,32 @@ class ChatBot:
     def _load_model(self):
         """Load the local model and tokenizer."""
         print(f"Loading model from {self.model_path}...")
-        self.model = AutoModelForCausalLM.from_pretrained(self.model_path)
-        self.tokenizer = AutoTokenizer.from_pretrained(self.model_path)
+        
+        # Load tokenizer
+        try:
+            print("Loading tokenizer...")
+            self.tokenizer = AutoTokenizer.from_pretrained(
+                self.model_path,
+                local_files_only=True
+            )
+            print("Tokenizer loaded successfully!")
+        except Exception as e:
+            print(f"Tokenizer loading failed: {e}")
+            return
+        
+        # Load model
+        try:
+            print("Loading model...")
+            self.model = AutoModelForCausalLM.from_pretrained(
+                self.model_path,
+                local_files_only=True,
+                torch_dtype="auto",
+                device_map="auto"
+            )
+            print("Model loaded successfully!")
+        except Exception as e:
+            print(f"Model loading failed: {e}")
+            return
         
         # Set pad token if not set
         if self.tokenizer.pad_token is None:
