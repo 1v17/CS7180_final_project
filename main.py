@@ -69,6 +69,9 @@ def main():
         print(f"Configuration: {config_mode}")
         
         chatbot = ChatBot(memory_mode=memory_mode, config_mode=config_mode)
+        # Uncomment the line below to specify a custom model path
+        # chatbot = ChatBot(model_path="./models/your_new_model_name", 
+        #                   memory_mode=memory_mode, config_mode=config_mode)
         
         print("\nChatBot ready! Type 'quit' to exit.")
         print("\nAvailable commands:")
