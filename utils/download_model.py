@@ -4,9 +4,8 @@ It should only be run once to download the model files.
 """
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
-# Using an open model that doesn't require authentication
-MODEL_NAME = "microsoft/DialoGPT-medium"
-MODEL_PATH = "./models/test_local_model"
+MODEL_NAME = "meta-llama/Llama-3.1-8B-Instruct"
+MODEL_PATH = "./models/Llama-3.1-8B-Instruct"
 
 # First time - this downloads to cache
 model = AutoModelForCausalLM.from_pretrained(MODEL_NAME)
