@@ -98,6 +98,8 @@ class MemoryEvaluator:
             # Import ChatBot here to avoid circular imports
             import sys
             import os
+            import time
+            import shutil
             
             # Add project root to path if not already there
             project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -108,18 +110,41 @@ class MemoryEvaluator:
             
             self.logger.info("Initializing ChatBot instances...")
             
-            # Initialize ChatBots for each memory mode
+            # Clean up any existing Qdrant database to ensure fresh start
+            qdrant_path = "/tmp/qdrant"
+            if os.path.exists(qdrant_path):
+                self.logger.info(f"Cleaning up existing Qdrant database at {qdrant_path}")
+                try:
+                    shutil.rmtree(qdrant_path, ignore_errors=True)
+                    time.sleep(1.0)  # Wait for cleanup
+                except Exception as e:
+                    self.logger.warning(f"Could not clean up existing Qdrant database: {e}")
+            
+            # Initialize ChatBots for each memory mode sequentially
             for memory_mode in self.config.memory_modes:
                 config_mode = self.config.config_modes.get(memory_mode, "testing")
                 
                 self.logger.info(f"Creating ChatBot for {memory_mode} mode...")
-                chatbot = ChatBot(
-                    model_path=self.config.local_model_path,
-                    memory_mode=memory_mode,
-                    config_mode=config_mode
-                )
-                self.chatbots[memory_mode] = chatbot
-                self.logger.info(f"[INIT] ChatBot for {memory_mode} mode initialized")
+                
+                try:
+                    chatbot = ChatBot(
+                        model_path=self.config.local_model_path,
+                        memory_mode=memory_mode,
+                        config_mode=config_mode
+                    )
+                    self.chatbots[memory_mode] = chatbot
+                    self.logger.info(f"[INIT] ChatBot for {memory_mode} mode initialized")
+                    
+                    # Small delay and cleanup before next instance to avoid conflicts
+                    time.sleep(0.5)
+                    
+                except Exception as e:
+                    self.logger.error(f"Failed to initialize {memory_mode} ChatBot: {e}")
+                    # If we can't create this ChatBot, continue with others
+                    continue
+            
+            if not self.chatbots:
+                raise Exception("No ChatBot instances could be initialized")
             
             # Initialize LLM judge (using OpenAI GPT-4o-mini)
             self.logger.info("Creating LLM judge...")
@@ -135,7 +160,7 @@ class MemoryEvaluator:
                 self.llm_judge = LLMJudge(api_key)
                 self.logger.info("[INIT] LLM judge initialized with GPT-4o-mini")
             
-            self.logger.info(f"All components initialized successfully!")
+            self.logger.info(f"Initialized {len(self.chatbots)} ChatBot instances successfully!")
             
         except Exception as e:
             self.logger.error(f"Failed to initialize ChatBots: {e}")
@@ -166,7 +191,7 @@ class MemoryEvaluator:
                         # Use chat method to naturally add to memory
                         # We don't need the response, just the memory storage
                         _ = chatbot.chat(
-                            message.text, 
+                            message=message.text, 
                             user_id=user_id,
                             max_new_tokens=10  # Minimal generation since we only want memory storage
                         )

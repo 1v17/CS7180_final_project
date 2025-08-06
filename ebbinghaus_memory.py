@@ -92,12 +92,13 @@ class EbbinghausMemory(Memory):
         self.memory_mode = mode
         print(f"Memory mode changed from '{old_mode}' to '{mode}'")
     
-    def add(self, message: str, user_id: str = None, metadata: Dict = None, **kwargs) -> str:
+    def add(self, messages, user_id: str = None, metadata: Dict = None, **kwargs) -> str:
         """
         Override add method to conditionally include strength metadata.
+        Compatible with Mem0's Memory.add() signature.
         
         Args:
-            message (str): The message/memory to store
+            messages: Messages to store (can be a single message or list of messages)
             user_id (str, optional): User identifier
             metadata (Dict, optional): Additional metadata
             **kwargs: Additional arguments passed to parent class
@@ -107,7 +108,7 @@ class EbbinghausMemory(Memory):
         """
         # In standard mode, use default Mem0 behavior
         if self.memory_mode == "standard":
-            return super().add(message, user_id=user_id, metadata=metadata, **kwargs)
+            return super().add(messages, user_id=user_id, metadata=metadata, **kwargs)
         
         # In ebbinghaus mode, add strength metadata
         current_time = datetime.now(timezone.utc).isoformat()
@@ -125,7 +126,7 @@ class EbbinghausMemory(Memory):
         if metadata:
             ebbinghaus_metadata.update(metadata)
         
-        return super().add(message, user_id=user_id, metadata=ebbinghaus_metadata, **kwargs)
+        return super().add(messages, user_id=user_id, metadata=ebbinghaus_metadata, **kwargs)
     
     def calculate_retention(self, memory_metadata: Dict) -> float:
         """
