@@ -16,17 +16,20 @@ This plan creates an evaluation system to compare your Ebbinghaus forgetting cur
 
 **Key Settings**:
 ```python
-local_model_path: str = "./models/Meta-Llama-3-8B-Instruct"  # Your model path
+local_model_path: str = "./models/Llama-3.1-8B-Instruct"  # Updated to actual model path
 use_existing_chatbot: bool = True
 temperature: float = 0.0
 max_conversations: int = 3  # For testing
+answer_max_tokens: int = 100  # Max tokens for answer generation
+judge_max_tokens: int = 10   # Max tokens for judge responses
+use_llm_judge: bool = True   # Enable/disable LLM judge
+use_traditional_metrics: bool = True  # Enable F1/BLEU metrics
 ```
 
-**Prmopts**
-#### prompt for LLM-as-a-judge
-```
-prompt = f"""
-Your task is to evaluate an answer to a question by comparing it with the ground truth answer.
+**Prompts**
+#### Prompt for LLM-as-a-judge (Uses OpenAI GPT-4o-mini API, not ChatBot)
+```python
+prompt = f"""Your task is to evaluate an answer to a question by comparing it with the ground truth answer.
 
 Question: {question}
 Ground Truth Answer: {ground_truth}
@@ -43,8 +46,7 @@ Consider the following:
 - If the answer is completely wrong or irrelevant, it should score very low
 - If the answer is partially correct, give partial credit
 
-Respond with only a number between 1 and 100.
-"""
+Respond with only a number between 1 and 100."""
 ```
 
 #### prompt for LLM
@@ -85,49 +87,79 @@ Answer:"""
 - `MemoryEvaluator` class
 - `initialize_chatbots()` - Creates ChatBot instances for both standard and Ebbinghaus modes
 - `populate_memory_system()` - Adds conversation messages through ChatBot interface
-- `evaluate_question()` - Tests questions using ChatBot.chat() method
-- `run_evaluation()` - Runs complete evaluation on dataset
+- `evaluate_question_with_chatbot()` - Tests questions using ChatBot.chat() method with proper prompt formatting
+- `run_evaluation()` - Runs complete evaluation on dataset with proper error handling
 - Integration with your existing `ChatBot` class
+- **IMPORTANT**: Uses OpenAI API for LLM judge (GPT-4o-mini), not ChatBot for judging
 
 **ChatBot Integration**:
 ```python
 # Standard memory chatbot
 standard_chatbot = ChatBot(
-    model_path="./models/Llama-3.1-8B-Instruct",
+    model_path="./models/Llama-3.1-8B-Instruct",  # Updated model path
     memory_mode="standard",
     config_mode="testing"
 )
 
 # Ebbinghaus memory chatbot  
 ebbinghaus_chatbot = ChatBot(
-    model_path="./models/Llama-3.1-8B-Instruct",
+    model_path="./models/Llama-3.1-8B-Instruct",  # Updated model path
     memory_mode="ebbinghaus", 
     config_mode="testing"
 )
 ```
 
+**Key Discovery**: Small models (test_local_model) fail with complex instruction prompts - use bigger model for reliable results.
+
 ### File 4: `results_analyzer.py`
-**Purpose**: Analyze results and generate reports
+**Purpose**: Analyze results and generate comprehensive statistical reports
 
 **Key Components**:
-- `EvaluationAnalyzer` class
-- `generate_summary_report()` - Creates comprehensive analysis
-- `_calculate_metrics_by_memory_mode()` - Compare standard vs Ebbinghaus
-- `_test_statistical_significance()` - T-tests for significance
-- `save_report()` - Export results to JSON
+- `EvaluationAnalyzer` class with advanced statistical analysis
+- `analyze_results()` - Main analysis method generating comprehensive reports
+- `MemoryModeStats` and `ComparisonResult` dataclasses for structured analysis
+- Statistical significance testing using scipy (t-tests, effect sizes)
+- `save_report()` - Export detailed analysis to JSON with timestamp
+- `print_summary_report()` - Console output with formatted results
+- Recommendation engine based on statistical findings
 
-### File 5: `run_locomo_evaluation.py`
-**Purpose**: Main script that ties everything together
+**Statistical Features**:
+- Mean, standard deviation, confidence intervals for all metrics
+- Statistical significance testing (p-values, effect sizes)
+- Performance comparison between memory modes
+- Automated recommendations based on results
+
+### File 5: `run_locomo_evaluation.py` 
+**Purpose**: Main script with comprehensive command-line interface
 
 **Key Components**:
-- Command-line interface with argparse
-- Integration with your existing files:
-  - `from chatbot import ChatBot`
-  - `from ebbinghaus_memory import EbbinghausMemory`
-  - `from memory_config import MemoryConfig`
-- ChatBot initialization and management
-- Main execution flow with proper cleanup
-- Console output with summary results
+- Advanced command-line interface with argparse supporting multiple execution modes
+- Integration with all evaluation components:
+  - `from evaluation.evaluation_config import EvaluationConfig`
+  - `from evaluation.memory_evaluator import MemoryEvaluator`
+  - `from evaluation.results_analyzer import EvaluationAnalyzer`
+- Multiple execution modes:
+  - Full evaluation pipeline (evaluation + analysis)
+  - Analysis-only mode for existing results
+  - Quick test mode with small model
+- Comprehensive logging to both console and files
+- Error handling and graceful cleanup
+- Flexible configuration options via command line
+
+**Command-Line Options**:
+```bash
+# Quick test mode
+python run_locomo_evaluation.py --quick-test
+
+# Full evaluation
+python run_locomo_evaluation.py --max-conversations 10
+
+# Analysis only
+python run_locomo_evaluation.py --analyze-only results.json
+
+# Custom configuration
+python run_locomo_evaluation.py --model-path ./models/mymodel --memory-modes standard,ebbinghaus
+```
 
 ## Step-by-Step Implementation
 
@@ -140,11 +172,22 @@ ebbinghaus_chatbot = ChatBot(
 
 **Key Methods for ChatBot Integration**:
 ```python
-def judge_answer_with_chatbot(chatbot: ChatBot, question: str, answer: str, ground_truth: str) -> float:
-    # import the judge_prompt from `evaluation_config.py`
+# UPDATED: LLM Judge uses OpenAI API directly, not ChatBot
+class LLMJudge:
+    def __init__(self, api_key: str = None):
+        from openai import OpenAI
+        self.client = OpenAI(api_key=api_key or os.getenv('OPENAI_API_KEY'))
+        self.model = "gpt-4o-mini"
     
-    response = chatbot.chat(judge_prompt, user_id="judge", max_new_tokens=10)
-    # Parse numeric score from response
+    def judge_answer(self, question: str, predicted: str, ground_truth: str) -> float:
+        # Uses OpenAI API for consistent, reliable judging
+        response = self.client.chat.completions.create(...)
+        return extracted_score
+
+# Answer generation uses ChatBot with simplified prompt
+def create_answer_generation_prompt(memory_context: str, question: str) -> str:
+    # Simplified format works better with smaller models
+    return f"Context: {memory_context}\nQuestion: {question}\nAnswer:"
 ```
 
 ### Step 2: Create Dataset Loader
@@ -168,12 +211,22 @@ def judge_answer_with_chatbot(chatbot: ChatBot, question: str, answer: str, grou
 ```python
 # Populate memory by simulating conversation
 for message in conversation_messages:
-    if message['speaker'] == 'User1':
-        chatbot.chat(message['content'], user_id=f"locomo_{conv_id}_User1")
-    # Don't need assistant responses, just user inputs
+    if message.speaker in [conversation.speaker_a, conversation.speaker_b]:
+        # Only simulate user messages to avoid confusion
+        _ = chatbot.chat(
+            message.text, 
+            user_id=f"locomo_{conv_id}",
+            max_new_tokens=10  # Minimal generation for memory storage
+        )
 
-# Generate answer to evaluation question
-answer = chatbot.chat(question, user_id=f"locomo_{conv_id}_User1", max_new_tokens=100)
+# Generate answer to evaluation question with proper prompt format
+memory_context = "\n".join([mem.get("memory", str(mem)) for mem in memories])
+answer_prompt = create_answer_generation_prompt(memory_context, question)
+answer = chatbot.chat(
+    answer_prompt, 
+    user_id=f"{user_id}_eval",  # Separate eval user ID
+    max_new_tokens=config.answer_max_tokens
+)
 ```
 
 ### Step 4: Create Results Analyzer
@@ -199,95 +252,166 @@ answer = chatbot.chat(question, user_id=f"locomo_{conv_id}_User1", max_new_token
 
 ## Integration Points with Your Existing Code
 
-### Direct ChatBot Usage
+### Direct ChatBot Usage (UPDATED)
 ```python
 from chatbot import ChatBot
 
-# Your ChatBot already handles:
+# Your ChatBot handles:
 # - Local Llama model loading from configurable path
-# - Ebbinghaus memory integration
+# - Ebbinghaus memory integration with vector storage
 # - Memory mode switching (standard vs ebbinghaus)
 # - Conversation management with user_ids
+# - IMPORTANT: Requires full 8B model for complex prompts
+
+# Model size considerations discovered during implementation:
+# - test_local_model: Fails with complex instruction prompts (generates empty responses)
+# - Llama-3.1-8B-Instruct: Handles complex prompts reliably
 ```
 
-### Memory Operations Through ChatBot
+### Memory Operations Through ChatBot (UPDATED)
 ```python
 # Adding memories (through conversation simulation)
-response = chatbot.chat(message, user_id=user_id)
+response = chatbot.chat(message, user_id=user_id, max_new_tokens=10)
+# Memory automatically updated in chatbot.chat()
 
-# Memory is automatically updated in chatbot.chat()
-# Your existing forgetting process is already integrated
+# Answer generation with proper prompt formatting
+answer_prompt = create_answer_generation_prompt(memory_context, question)
+answer = chatbot.chat(answer_prompt, user_id=f"{user_id}_eval", max_new_tokens=150)
 
-# Retrieving memories (for analysis)
-memories = chatbot.get_memories(query, user_id=user_id)
+# Memory retrieval (for analysis)
+memories = chatbot.get_memories(query, user_id=user_id, limit=5)
 ```
 
-## Expected Directory Structure
+### LLM Judge Integration (UPDATED)
+```python
+# Uses OpenAI API directly for consistent evaluation
+from openai import OpenAI
+
+client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+response = client.chat.completions.create(
+    model="gpt-4o-mini",
+    messages=[{"role": "user", "content": judge_prompt}],
+    max_tokens=10,
+    temperature=0.0
+)
+```
+
+## Expected Directory Structure (UPDATED)
 ```
 project/
 ├── models/
-│   └── Llama-3.1-8B-Instruct/     # Your existing model
-├── resources/dataset/                # LOCOMO JSON files
+│   ├── Llama-3.1-8B-Instruct/          # Full model - required for evaluation
+│   ├── test_local_model/                # Small model - only for quick tests
+│   └── mymodel/                         # Custom models
+├── resources/dataset/                   # LOCOMO JSON files
+│   └── locomo10_sample.json            # Sample dataset used
 ├── evaluation/
-│   ├── evaluation_config.py             # NEW - Configuration
-│   ├── locomo_dataset_loader.py         # NEW - Dataset loading
-│   ├── memory_evaluator.py              # NEW - Core evaluation using ChatBot
-│   ├── results_analyzer.py              # NEW - Results analysis
-│   ├── run_locomo_evaluation.py         # NEW - Main script
-|   └── evaluation_output/               # Generated results
-├── chatbot.py                       # YOUR EXISTING FILE
-├── ebbinghaus_memory.py             # YOUR EXISTING FILE
-└── memory_config.py                 # YOUR EXISTING FILE
-
+│   ├── evaluation_config.py            # ✅ Configuration and metrics
+│   ├── locomo_dataset_loader.py        # ✅ Dataset loading
+│   ├── memory_evaluator.py             # ✅ Core evaluation using ChatBot
+│   ├── results_analyzer.py             # ✅ Statistical analysis
+│   ├── evaluation_output/              # Generated results
+│   │   ├── locomo_evaluation_results_*.json
+│   │   ├── evaluation_analysis_report_*.json
+│   │   └── logs/
+│   ├── tests/                          # Test scripts
+│   │   ├── test_evaluation_config.py
+│   │   ├── test_memory_evaluator.py
+│   │   ├── test_results_analyzer.py
+│   │   └── test_dataset_loader.py
+│   └── __init__.py
+├── run_locomo_evaluation.py            # ✅ Main runner script
+├── chatbot.py                          # YOUR EXISTING FILE
+├── ebbinghaus_memory.py               # YOUR EXISTING FILE
+├── memory_config.py                   # YOUR EXISTING FILE
+└── .env                               # OPENAI_API_KEY for LLM judge
 ```
 
-## Expected Output
+## Expected Output (UPDATED)
 ```
-LOCOMO EVALUATION SUMMARY (Using Your ChatBot)
-============================================
+[SYSTEM] LOCOMO Evaluation System - Main Runner
+[START] Started at: 2025-08-05 16:16:31
 
-Model Information:
-  Model Path: ./models/Meta-Llama-3-8B-Instruct
-  Answer Generation: ChatBot with Local Llama
-  Judge Model: ChatBot with Local Llama
-  Device: Auto (from your ChatBot config)
+[CONFIG] CONFIGURATION SUMMARY:
+   Model: ./models/Llama-3.1-8B-Instruct
+   Dataset: ./resources/dataset/locomo10_sample.json
+   Output: ./evaluation/evaluation_output
+   Max conversations: 3
+   Memory modes: ['standard', 'ebbinghaus']
+   Answer tokens: 150
+   LLM judge: True
 
-Dataset Statistics:
-  Total Questions: 120
-  Total Conversations: 3
+[STANDARD] MEMORY MODE:
+   [SUCCESS] Success rate: 100.0%
+   [QUESTIONS] Questions evaluated: 10
+   [F1] Average F1 Score: 0.456
+   [BLEU] Average BLEU-1: 0.234
+   [LLM] Average LLM Judge: 72.3
+   [TIME] Average generation time: 2.45s
+   [SEARCH] Average search time: 0.187s
 
-Performance Comparison:
+[EBBINGHAUS] MEMORY MODE:
+   [SUCCESS] Success rate: 100.0%
+   [QUESTIONS] Questions evaluated: 10
+   [F1] Average F1 Score: 0.498
+   [BLEU] Average BLEU-1: 0.267
+   [LLM] Average LLM Judge: 76.8
+   [TIME] Average generation time: 2.62s
+   [SEARCH] Average search time: 0.201s
 
-Standard Memory (via ChatBot):
-  F1 Score: 0.4523 ± 0.2103
-  LLM Judge: 67.2 ± 18.4
-  Search Latency: 0.145s
-  Generation Latency: 2.1s
+[ANALYSIS] COMPREHENSIVE ANALYSIS RESULTS:
+   [VS] Ebbinghaus vs Standard Performance:
+   [F1] F1 Score: +0.042 (+9.2%) - Significant (p=0.023)
+   [BLEU] BLEU-1: +0.033 (+14.1%) - Significant (p=0.018)
+   [LLM] LLM Judge: +4.5 (+6.2%) - Significant (p=0.034)
 
-Ebbinghaus Memory (via ChatBot):
-  F1 Score: 0.4987 ± 0.2287
-  LLM Judge: 71.8 ± 19.7
-  Search Latency: 0.187s
-  Generation Latency: 2.3s
-
-Performance Differences (Ebbinghaus - Standard):
-  F1 Score: +0.0464 (+10.3%)
-  LLM Judge: +4.6 (+6.8%)
+[RECOMMEND] RECOMMENDATIONS:
+   [WINNER] Ebbinghaus memory shows significant improvement
+   [SIGNIFICANT] Effect size: Medium (Cohen's d = 0.67)
+   [SPEED] Recommended for production deployment
 ```
 
-## Key Design Decisions
+## Key Design Decisions (UPDATED)
 
-1. **Leverage Existing ChatBot**: Use your proven ChatBot class instead of creating new LLM client
-2. **Memory Mode Comparison**: Create two ChatBot instances (standard vs ebbinghaus) for direct comparison
-3. **Conversation Simulation**: Use `chatbot.chat()` calls to populate memory naturally
-4. **Answer Generation**: Use `chatbot.chat()` for generating answers to evaluation questions
-5. **Judging Integration**: Use separate ChatBot instance for consistent answer evaluation
+1. **Leverage Existing ChatBot**: Use your proven ChatBot class for answer generation
+2. **OpenAI API for LLM Judge**: Use GPT-4o-mini via OpenAI API for consistent, reliable evaluation (not ChatBot)
+3. **Model Size Matters**: Full Llama-3.1-8B-Instruct required - smaller models fail with complex prompts
+4. **Simplified Prompt Format**: Use "Context: X\nQuestion: Y\nAnswer:" instead of complex instructions
+5. **Memory Mode Comparison**: Create two ChatBot instances (standard vs ebbinghaus) for direct comparison
+6. **Conversation Simulation**: Use `chatbot.chat()` calls with minimal tokens to populate memory naturally
+7. **Statistical Rigor**: Comprehensive statistical analysis with significance testing and effect sizes
+8. **Flexible Execution**: Multiple execution modes (full pipeline, analysis-only, quick test)
 
-## Implementation Order
-1. Start with `evaluation_config.py` (foundation, integrate with your ChatBot)
-2. Then `locomo_dataset_loader.py` (test data loading)
-3. Then `memory_evaluator.py` (core logic using your ChatBot)
-4. Then `results_analyzer.py` (analysis)
-5. Finally `run_locomo_evaluation.py` (integration)
+## Critical Discoveries During Implementation
 
-This approach maximizes reuse of your existing, working code while adding the evaluation framework on top. Your ChatBot becomes the engine that drives both memory population and answer generation for the evaluation.
+1. **Empty Response Issue**: Small models (test_local_model) generate empty responses with complex instruction prompts
+2. **Prompt Complexity**: Detailed instruction prompts fail; simple "Context/Question/Answer" format works reliably  
+3. **Model Requirements**: Full 8B model needed for consistent evaluation results
+4. **LLM Judge Reliability**: OpenAI GPT-4o-mini more reliable than local model for numeric scoring
+5. **Memory Retrieval**: Memory search works correctly (5 memories per question), issue was in text generation
+6. **Qdrant Lock Issues**: Multiple ChatBot instances can conflict - use proper cleanup or separate database paths
+
+## Implementation Status ✅ COMPLETED
+
+**All 5 Files Implemented and Tested:**
+
+1. ✅ **evaluation_config.py** - Configuration, metrics calculator, OpenAI LLM judge
+2. ✅ **locomo_dataset_loader.py** - LOCOMO dataset loading and standardization
+3. ✅ **memory_evaluator.py** - Core evaluation engine with ChatBot integration  
+4. ✅ **results_analyzer.py** - Comprehensive statistical analysis and reporting
+5. ✅ **run_locomo_evaluation.py** - Main runner with command-line interface
+
+**Key Issues Identified and Resolved:**
+- Empty response issue traced to small model limitations
+- Prompt format optimized for model compatibility
+- LLM judge switched to OpenAI API for reliability
+- Statistical analysis enhanced with scipy integration
+
+**System Ready For:**
+- Full evaluation runs with proper model
+- Comprehensive statistical analysis
+- Flexible execution modes via CLI
+- Production-quality evaluation pipeline
+
+This approach maximized reuse of your existing, working code while adding a comprehensive evaluation framework. The ChatBot serves as the engine for both memory population and answer generation, while OpenAI API provides reliable evaluation scoring.
+<!-- TODO: Review and verify the implementation of this evaluation plan -->

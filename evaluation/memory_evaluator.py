@@ -14,8 +14,8 @@ import json
 import os
 
 # Import local modules
-from .evaluation_config import EvaluationConfig, MetricsCalculator, LLMJudge, create_answer_generation_prompt
-from .locomo_dataset_loader import LOCOMODatasetLoader, StandardizedConversation
+from evaluation.evaluation_config import EvaluationConfig, MetricsCalculator, LLMJudge, create_answer_generation_prompt
+from evaluation.locomo_dataset_loader import LOCOMODatasetLoader, StandardizedConversation
 
 # Import the existing ChatBot - will be imported dynamically to avoid circular imports
 
@@ -119,7 +119,7 @@ class MemoryEvaluator:
                     config_mode=config_mode
                 )
                 self.chatbots[memory_mode] = chatbot
-                self.logger.info(f"✅ ChatBot for {memory_mode} mode initialized")
+                self.logger.info(f"[INIT] ChatBot for {memory_mode} mode initialized")
             
             # Initialize LLM judge (using OpenAI GPT-4o-mini)
             self.logger.info("Creating LLM judge...")
@@ -133,7 +133,7 @@ class MemoryEvaluator:
                 self.llm_judge = None
             else:
                 self.llm_judge = LLMJudge(api_key)
-                self.logger.info("✅ LLM judge initialized with GPT-4o-mini")
+                self.logger.info("[INIT] LLM judge initialized with GPT-4o-mini")
             
             self.logger.info(f"All components initialized successfully!")
             
@@ -283,7 +283,7 @@ class MemoryEvaluator:
         Returns:
             ConversationEvaluationSummary: Evaluation summary
         """
-        self.logger.info(f"📊 Evaluating conversation {conversation.conversation_id} with {memory_mode} memory...")
+        self.logger.info(f"[EVAL] Evaluating conversation {conversation.conversation_id} with {memory_mode} memory...")
         
         chatbot = self.chatbots[memory_mode]
         
@@ -305,10 +305,10 @@ class MemoryEvaluator:
             if result:
                 results.append(result)
                 successful += 1
-                self.logger.debug(f"✅ Question {i+1}: F1={result.f1_score:.3f}, BLEU={result.bleu_1_score:.3f}, Judge={result.llm_judge_score:.1f}")
+                self.logger.debug(f"[SUCCESS] Question {i+1}: F1={result.f1_score:.3f}, BLEU={result.bleu_1_score:.3f}, Judge={result.llm_judge_score:.1f}")
             else:
                 failed += 1
-                self.logger.warning(f"❌ Question {i+1}: Evaluation failed")
+                self.logger.warning(f"[FAILED] Question {i+1}: Evaluation failed")
         
         # Calculate averages
         if results:
@@ -334,7 +334,7 @@ class MemoryEvaluator:
             results=results
         )
         
-        self.logger.info(f"📈 Conversation summary: {successful}/{len(conversation.questions)} questions, "
+        self.logger.info(f"[SUMMARY] Conversation summary: {successful}/{len(conversation.questions)} questions, "
                         f"F1={avg_f1:.3f}, BLEU={avg_bleu:.3f}, Judge={avg_judge:.1f}")
         
         return summary
@@ -349,13 +349,13 @@ class MemoryEvaluator:
         Returns:
             Dict[str, List[ConversationEvaluationSummary]]: Results by memory mode
         """
-        self.logger.info(f"🚀 Starting LOCOMO evaluation with dataset: {dataset_filename}")
+        self.logger.info(f"[START] Starting LOCOMO evaluation with dataset: {dataset_filename}")
         
         # Initialize ChatBots
         self.initialize_chatbots()
         
         # Load dataset
-        self.logger.info("📂 Loading dataset...")
+        self.logger.info("[LOAD] Loading dataset...")
         conversations = self.dataset_loader.load_conversations(dataset_filename)
         
         # Filter conversations based on config
@@ -370,7 +370,7 @@ class MemoryEvaluator:
         
         # Get dataset statistics
         stats = self.dataset_loader.get_dataset_statistics(conversations)
-        self.logger.info(f"📊 Dataset stats: {stats['total_conversations']} conversations, "
+        self.logger.info(f"[STATS] Dataset stats: {stats['total_conversations']} conversations, "
                         f"{stats['total_questions']} questions, "
                         f"{stats['average_questions_per_conversation']:.1f} questions/conv")
         
@@ -378,7 +378,7 @@ class MemoryEvaluator:
         results_by_mode = {}
         
         for memory_mode in self.config.memory_modes:
-            self.logger.info(f"\n🧠 Evaluating {memory_mode.upper()} memory mode...")
+            self.logger.info(f"\n[MODE] Evaluating {memory_mode.upper()} memory mode...")
             mode_results = []
             
             for i, conversation in enumerate(conversations):
@@ -390,7 +390,7 @@ class MemoryEvaluator:
                 self.logger.info(f"Progress: {i+1}/{len(conversations)} conversations completed")
             
             results_by_mode[memory_mode] = mode_results
-            self.logger.info(f"✅ {memory_mode.upper()} mode evaluation completed!")
+            self.logger.info(f"[COMPLETE] {memory_mode.upper()} mode evaluation completed!")
         
         # Store results
         self.conversation_summaries = results_by_mode
@@ -487,7 +487,7 @@ class MemoryEvaluator:
         self.judge_chatbot = None
         self.llm_judge = None
         
-        self.logger.info("✅ Cleanup completed")
+        self.logger.info("[CLEANUP] Cleanup completed")
     
     def __del__(self):
         """Destructor to ensure cleanup."""

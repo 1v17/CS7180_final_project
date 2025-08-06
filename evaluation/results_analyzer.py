@@ -117,14 +117,14 @@ class EvaluationAnalyzer:
         Returns:
             EvaluationReport: Comprehensive analysis report
         """
-        self.logger.info("🔬 Analyzing evaluation results...")
+        self.logger.info("[ANALYSIS] Analyzing evaluation results...")
         
         # Calculate statistics for each memory mode
         memory_mode_stats = {}
         for mode, summaries in results_data.items():
             stats = self._calculate_memory_mode_stats(mode, summaries)
             memory_mode_stats[mode] = stats
-            self.logger.info(f"📊 {mode.upper()} mode: {stats.total_questions} questions, "
+            self.logger.info(f"[STATS] {mode.upper()} mode: {stats.total_questions} questions, "
                            f"F1={stats.avg_f1_score:.3f}, BLEU={stats.avg_bleu_1_score:.3f}, "
                            f"Judge={stats.avg_llm_judge_score:.1f}")
         
@@ -147,7 +147,7 @@ class EvaluationAnalyzer:
             recommendations=recommendations
         )
         
-        self.logger.info("✅ Analysis completed successfully!")
+        self.logger.info("[SUCCESS] Analysis completed successfully!")
         return report
     
     def _calculate_memory_mode_stats(self, mode: str, summaries: List[Any]) -> MemoryModeStats:
@@ -462,10 +462,10 @@ class EvaluationAnalyzer:
             best_judge_mode = max(memory_mode_stats.items(), key=lambda x: x[1].avg_llm_judge_score)
             
             if best_f1_mode[0] == best_judge_mode[0]:
-                recommendations.append(f"🏆 **{best_f1_mode[0].upper()} memory consistently outperforms** "
+                recommendations.append(f"[WINNER] **{best_f1_mode[0].upper()} memory consistently outperforms** "
                                      f"across both traditional (F1) and LLM-based evaluation metrics.")
             else:
-                recommendations.append(f"📊 **Mixed results**: {best_f1_mode[0].upper()} performs best on F1 score "
+                recommendations.append(f"[MIXED] **Mixed results**: {best_f1_mode[0].upper()} performs best on F1 score "
                                      f"({best_f1_mode[1].avg_f1_score:.3f}), while {best_judge_mode[0].upper()} "
                                      f"performs best on LLM judge score ({best_judge_mode[1].avg_llm_judge_score:.1f}).")
         
@@ -477,10 +477,10 @@ class EvaluationAnalyzer:
                     significant_improvements.append(f"{comparison.comparison_mode} over {comparison.baseline_mode}")
             
             if significant_improvements:
-                recommendations.append(f"📈 **Statistically significant improvements** found: "
+                recommendations.append(f"[SIGNIFICANT] **Statistically significant improvements** found: "
                                      f"{', '.join(significant_improvements)}.")
             else:
-                recommendations.append("⚠️  **No statistically significant differences** detected between memory modes "
+                recommendations.append("[WARNING] **No statistically significant differences** detected between memory modes "
                                      "(p > 0.05). Consider increasing sample size or investigating other factors.")
         
         # Performance vs efficiency trade-offs
@@ -490,24 +490,24 @@ class EvaluationAnalyzer:
             
             speed_diff = slowest_mode[1].avg_generation_time - fastest_mode[1].avg_generation_time
             if speed_diff > 1.0:  # More than 1 second difference
-                recommendations.append(f"⚡ **Performance trade-off**: {fastest_mode[0].upper()} is "
+                recommendations.append(f"[SPEED] **Performance trade-off**: {fastest_mode[0].upper()} is "
                                      f"{speed_diff:.1f}s faster per question than {slowest_mode[0].upper()}. "
                                      f"Consider speed requirements for production deployment.")
         
         # Data quality recommendations
         total_questions = sum(stats.total_questions for stats in memory_mode_stats.values())
         if total_questions < 50:
-            recommendations.append("🔬 **Small sample size**: Consider evaluating on more questions "
+            recommendations.append("[SAMPLE] **Small sample size**: Consider evaluating on more questions "
                                  f"(current: {total_questions}) for more robust statistical conclusions.")
         
         # Success rate recommendations
         low_success_modes = [mode for mode, stats in memory_mode_stats.items() if stats.success_rate < 0.9]
         if low_success_modes:
-            recommendations.append(f"🚨 **Low success rates** detected in {', '.join(low_success_modes)} "
+            recommendations.append(f"[ERROR] **Low success rates** detected in {', '.join(low_success_modes)} "
                                  f"modes. Investigate evaluation failures and error handling.")
         
         # Future work recommendations
-        recommendations.append("🔮 **Future work**: Consider evaluating on larger datasets, "
+        recommendations.append("[FUTURE] **Future work**: Consider evaluating on larger datasets, "
                              "different question types, and longer conversation histories for comprehensive analysis.")
         
         return recommendations
@@ -591,27 +591,27 @@ class EvaluationAnalyzer:
         with open(filepath, 'w', encoding='utf-8') as f:
             json.dump(report_dict, f, indent=2, ensure_ascii=False)
         
-        self.logger.info(f"📊 Analysis report saved to: {filepath}")
+        self.logger.info(f"[SAVE] Analysis report saved to: {filepath}")
         return filepath
     
     def print_summary_report(self, report: EvaluationReport):
         """Print a formatted summary report to console."""
         
         print("\n" + "=" * 70)
-        print("🔬 LOCOMO EVALUATION ANALYSIS REPORT")
+        print("[ANALYSIS] LOCOMO EVALUATION ANALYSIS REPORT")
         print("=" * 70)
         
-        print(f"\n📅 Generated: {report.timestamp}")
-        print(f"📂 Dataset: {report.dataset_info['dataset_filename']}")
-        print(f"💬 Conversations: {report.dataset_info['total_conversations']}")
-        print(f"❓ Questions: {report.dataset_info['total_questions']}")
-        print(f"📊 Memory Modes: {', '.join(report.dataset_info['memory_modes_evaluated'])}")
+        print(f"\n[DATE] Generated: {report.timestamp}")
+        print(f"[DATA] Dataset: {report.dataset_info['dataset_filename']}")
+        print(f"[CONV] Conversations: {report.dataset_info['total_conversations']}")
+        print(f"[QUEST] Questions: {report.dataset_info['total_questions']}")
+        print(f"[MODES] Memory Modes: {', '.join(report.dataset_info['memory_modes_evaluated'])}")
         
-        print(f"\n📈 PERFORMANCE BY MEMORY MODE")
+        print(f"\n[PERFORMANCE] PERFORMANCE BY MEMORY MODE")
         print("-" * 50)
         
         for mode, stats in report.memory_mode_stats.items():
-            print(f"\n🧠 {mode.upper()} Memory:")
+            print(f"\n[{mode.upper()}] Memory:")
             print(f"  Success Rate: {stats.success_rate:.1%} ({stats.successful_evaluations}/{stats.total_questions})")
             print(f"  F1 Score: {stats.avg_f1_score:.3f} ± {stats.std_f1_score:.3f}")
             print(f"  BLEU-1 Score: {stats.avg_bleu_1_score:.3f} ± {stats.std_bleu_1_score:.3f}")
@@ -620,11 +620,11 @@ class EvaluationAnalyzer:
             print(f"  Memory Search Time: {stats.avg_memory_search_time:.3f}s ± {stats.std_memory_search_time:.3f}s")
         
         if report.comparisons:
-            print(f"\n⚖️  PERFORMANCE COMPARISONS")
+            print(f"\n[COMPARE] PERFORMANCE COMPARISONS")
             print("-" * 50)
             
             for comp in report.comparisons:
-                print(f"\n📊 {comp.comparison_mode.upper()} vs {comp.baseline_mode.upper()}:")
+                print(f"\n[VS] {comp.comparison_mode.upper()} vs {comp.baseline_mode.upper()}:")
                 print(f"  F1 Score: {comp.f1_score_diff:+.3f} ({comp.f1_score_percent_change:+.1f}%)"
                       + (f" [p={comp.f1_p_value:.3f}]" if comp.f1_p_value else ""))
                 print(f"  BLEU-1 Score: {comp.bleu_1_score_diff:+.3f} ({comp.bleu_1_percent_change:+.1f}%)"
@@ -634,7 +634,7 @@ class EvaluationAnalyzer:
                 print(f"  Generation Time: {comp.generation_time_diff:+.2f}s ({comp.generation_time_percent_change:+.1f}%)")
         
         if report.summary.get("best_performing_mode"):
-            print(f"\n🏆 BEST PERFORMING MODES")
+            print(f"\n[BEST] BEST PERFORMING MODES")
             print("-" * 50)
             best = report.summary["best_performing_mode"]
             print(f"  F1 Score: {best['f1_score']['mode'].upper()} ({best['f1_score']['score']:.3f})")
@@ -642,12 +642,12 @@ class EvaluationAnalyzer:
             print(f"  LLM Judge Score: {best['llm_judge_score']['mode'].upper()} ({best['llm_judge_score']['score']:.1f})")
         
         if report.recommendations:
-            print(f"\n💡 RECOMMENDATIONS")
+            print(f"\n[RECOMMEND] RECOMMENDATIONS")
             print("-" * 50)
             for i, rec in enumerate(report.recommendations, 1):
                 print(f"  {i}. {rec}")
         
         if not SCIPY_AVAILABLE:
-            print(f"\n⚠️  Note: Install scipy for statistical significance testing")
+            print(f"\n[WARNING] Note: Install scipy for statistical significance testing")
         
         print("\n" + "=" * 70)
