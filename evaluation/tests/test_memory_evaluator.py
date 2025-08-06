@@ -26,7 +26,7 @@ def test_chatbot_initialization():
         config = EvaluationConfig(
             max_conversations=1,
             memory_modes=["standard"],  # Test one mode at a time to avoid file conflicts
-            local_model_path="./models/test_local_model"  # Use smaller test model
+            local_model_path="./models/TinyLlama-1.1B-Chat-v1.0"  # Use smaller test model
         )
         evaluator = MemoryEvaluator(config)
         
@@ -45,7 +45,7 @@ def test_chatbot_initialization():
         
         # Now test ebbinghaus mode separately
         config.memory_modes = ["ebbinghaus"]
-        config.local_model_path = "./models/test_local_model"  # Use smaller test model
+        config.local_model_path = "./models/TinyLlama-1.1B-Chat-v1.0"  # Use smaller test model
         evaluator = MemoryEvaluator(config)
         evaluator.initialize_chatbots()
         
@@ -72,7 +72,7 @@ def test_memory_population():
         config = EvaluationConfig(
             max_conversations=1,
             memory_modes=["standard"],  # Test one mode to avoid conflicts
-            local_model_path="./models/test_local_model"  # Use smaller test model
+            local_model_path="./models/TinyLlama-1.1B-Chat-v1.0"  # Use smaller test model
         )
         evaluator = MemoryEvaluator(config)
         
@@ -130,7 +130,7 @@ def test_question_evaluation():
             max_conversations=1, 
             use_llm_judge=False,  # Disable judge for faster testing
             memory_modes=["standard"],  # Test one mode to avoid conflicts
-            local_model_path="./models/test_local_model"  # Use smaller test model
+            local_model_path="./models/TinyLlama-1.1B-Chat-v1.0"  # Use smaller test model
         )
         evaluator = MemoryEvaluator(config)
         
@@ -195,7 +195,7 @@ def test_conversation_evaluation():
             max_conversations=1, 
             use_llm_judge=False,  # Disable judge for faster testing
             memory_modes=["standard"],  # Test one mode to avoid conflicts
-            local_model_path="./models/test_local_model"  # Use smaller test model
+            local_model_path="./models/TinyLlama-1.1B-Chat-v1.0"  # Use smaller test model
         )
         evaluator = MemoryEvaluator(config)
         
@@ -250,7 +250,7 @@ def test_evaluation_pipeline():
             max_conversations=1,  # Just one conversation
             use_llm_judge=False,  # Disable judge for speed
             memory_modes=["standard"],  # Just one mode for testing
-            local_model_path="./models/test_local_model"  # Use smaller test model
+            local_model_path="./models/TinyLlama-1.1B-Chat-v1.0"  # Use smaller test model
         )
         evaluator = MemoryEvaluator(config)
         
@@ -299,7 +299,7 @@ def test_llm_judge():
             max_conversations=1,
             use_llm_judge=True,  # Enable LLM judge
             memory_modes=["standard"],
-            local_model_path="./models/test_local_model"  # Use smaller test model
+            local_model_path="./models/TinyLlama-1.1B-Chat-v1.0"  # Use smaller test model
         )
         evaluator = MemoryEvaluator(config)
         
