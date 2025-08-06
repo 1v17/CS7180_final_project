@@ -45,7 +45,7 @@ class EvaluationConfig:
     max_new_tokens: int = 100
     
     # Dataset settings
-    dataset_path: str = "./resources/dataset/locomo10_sample.json"
+    dataset_path: str = "./resources/dataset/locomo10.json"
     output_dir: str = "./evaluation/evaluation_output"
     
     # Evaluation settings

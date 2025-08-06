@@ -91,7 +91,7 @@ Examples:
     
     # Dataset settings  
     parser.add_argument('--dataset',
-                       default='./resources/dataset/locomo10_sample.json',
+                       default='./resources/dataset/locomo10.json',
                        help='Path to LOCOMO dataset JSON file')
     
     parser.add_argument('--output-dir',
@@ -132,20 +132,23 @@ def create_evaluation_config(args) -> EvaluationConfig:
     # Quick test mode overrides
     if args.quick_test:
         model_path = './models/TinyLlama-1.1B-Chat-v1.0'
+        dataset_path = './resources/dataset/locomo10_sample.json'
         max_conversations = 1
         memory_modes = ['standard']  # Only test one mode
         print("[QUICK TEST MODE]:")
         print(f"   Using test model: {model_path}")
+        print(f"   Using test dataset: {dataset_path}")
         print(f"   Max conversations: {max_conversations}")  
         print(f"   Memory modes: {memory_modes}")
         print()
     else:
         model_path = args.model_path
+        dataset_path = args.dataset
         max_conversations = args.max_conversations
     
     config = EvaluationConfig(
         local_model_path=model_path,
-        dataset_path=args.dataset,
+        dataset_path=dataset_path,
         output_dir=args.output_dir,
         max_conversations=max_conversations,
         answer_max_tokens=args.answer_tokens,
