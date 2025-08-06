@@ -168,7 +168,7 @@ class MemoryEvaluator:
     
     def populate_chatbot_memory(self, chatbot, conversation: StandardizedConversation) -> Dict[str, Any]:
         """
-        Populate ChatBot memory by simulating the conversation.
+        Populate memory with actual LOCOMO conversation data.
         
         Args:
             chatbot: ChatBot instance to populate
@@ -179,26 +179,25 @@ class MemoryEvaluator:
         """
         start_time = time.time()
         user_id = f"locomo_{conversation.conversation_id}"
-        messages_added = 0
         
         try:
-            # Add each message to memory through chat simulation
-            for message in conversation.messages:
-                # Only simulate user messages to avoid confusion
-                # Skip assistant/system messages to focus on user input
-                if message.speaker in [conversation.speaker_a, conversation.speaker_b]:
-                    try:
-                        # Use chat method to naturally add to memory
-                        # We don't need the response, just the memory storage
-                        _ = chatbot.chat(
-                            message=message.text, 
-                            user_id=user_id,
-                            max_new_tokens=10  # Minimal generation since we only want memory storage
-                        )
-                        messages_added += 1
-                    except Exception as e:
-                        self.logger.warning(f"Failed to add message to memory: {e}")
-                        continue
+            # Create message pairs from LOCOMO conversation
+            messages = []
+            for i in range(0, len(conversation.messages) - 1, 2):
+                if i + 1 < len(conversation.messages):
+                    msg1 = conversation.messages[i]
+                    msg2 = conversation.messages[i + 1]
+                    
+                    messages.extend([
+                        {"role": "user", "content": msg1.text},
+                        {"role": "assistant", "content": msg2.text}
+                    ])
+            
+            # Add directly to memory (bypass chat simulation)
+            messages_added = 0
+            if messages:
+                result = chatbot.memory.add(messages, user_id=user_id)
+                messages_added = len(messages)
             
             population_time = time.time() - start_time
             
