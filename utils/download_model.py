@@ -4,8 +4,8 @@ It should only be run once to download the model files.
 """
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
-MODEL_NAME = "meta-llama/Llama-3.1-8B-Instruct"
-MODEL_PATH = "./models/Llama-3.1-8B-Instruct"
+MODEL_NAME = "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
+MODEL_PATH = "./models/TinyLlama-1.1B-Chat-v1.0"
 
 # First time - this downloads to cache
 model = AutoModelForCausalLM.from_pretrained(MODEL_NAME)
