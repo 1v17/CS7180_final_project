@@ -135,7 +135,8 @@ class ChatBot:
         
         # Store conversation in memory
         self.memory.add(
-            f"User: {message}, Assistant: {response}", 
+            {"role": "user", "content": message},
+            {"role": "assistant", "content": response},
             user_id=user_id
         )
         
