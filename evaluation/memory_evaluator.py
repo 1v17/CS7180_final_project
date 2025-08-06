@@ -363,29 +363,30 @@ class MemoryEvaluator:
         
         return summary
     
-    def run_evaluation(self, dataset_filename: str = "locomo10_sample.json") -> Dict[str, List[ConversationEvaluationSummary]]:
+    def run_evaluation(self) -> Dict[str, List[ConversationEvaluationSummary]]:
         """
         Run complete evaluation on the dataset.
-        
-        Args:
-            dataset_filename: Name of the dataset file to load
             
         Returns:
             Dict[str, List[ConversationEvaluationSummary]]: Results by memory mode
         """
-        self.logger.info(f"[START] Starting LOCOMO evaluation with dataset: {dataset_filename}")
+        self.logger.info(f"[START] Starting LOCOMO evaluation with dataset: {self.config.dataset_path}")
         
         # Initialize ChatBots
         self.initialize_chatbots()
         
-        # Load dataset
+        # Load dataset - extract filename from full path
+        import os
+        dataset_filename = os.path.basename(self.config.dataset_path)
         self.logger.info("[LOAD] Loading dataset...")
         conversations = self.dataset_loader.load_conversations(dataset_filename)
         
-        # Filter conversations based on config
+        # Filter conversations based on config (-1 means all conversations)
         if self.config.max_conversations > 0:
             conversations = conversations[:self.config.max_conversations]
             self.logger.info(f"🔢 Limited to {len(conversations)} conversations for testing")
+        else:
+            self.logger.info(f"🔢 Using all {len(conversations)} conversations from dataset")
         
         # Filter for quality
         conversations = self.dataset_loader.filter_conversations(
