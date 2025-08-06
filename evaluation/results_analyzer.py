@@ -156,7 +156,15 @@ class EvaluationAnalyzer:
         # Collect all individual results
         all_results = []
         for summary in summaries:
-            all_results.extend(summary.results)
+            # Handle both object and dictionary formats
+            if hasattr(summary, 'results'):
+                # Object format (ConversationEvaluationSummary)
+                all_results.extend(summary.results)
+            elif isinstance(summary, dict) and 'results' in summary:
+                # Dictionary format (loaded from JSON)
+                all_results.extend(summary['results'])
+            else:
+                self.logger.warning(f"Unknown summary format for {mode}: {type(summary)}")
         
         if not all_results:
             # Return default stats if no results
@@ -175,17 +183,27 @@ class EvaluationAnalyzer:
                 conversation_count=0, avg_questions_per_conversation=0.0
             )
         
+        # Helper function to get attribute from object or dictionary
+        def get_attr(item, attr_name):
+            """Get attribute from object or dictionary."""
+            if hasattr(item, attr_name):
+                return getattr(item, attr_name)
+            elif isinstance(item, dict):
+                return item.get(attr_name, 0)
+            else:
+                return 0
+        
         # Extract metrics
-        f1_scores = [r.f1_score for r in all_results]
-        bleu_1_scores = [r.bleu_1_score for r in all_results]
-        llm_judge_scores = [r.llm_judge_score for r in all_results]
-        generation_times = [r.generation_time for r in all_results]
-        memory_search_times = [r.memory_search_time for r in all_results]
+        f1_scores = [get_attr(r, 'f1_score') for r in all_results]
+        bleu_1_scores = [get_attr(r, 'bleu_1_score') for r in all_results]
+        llm_judge_scores = [get_attr(r, 'llm_judge_score') for r in all_results]
+        generation_times = [get_attr(r, 'generation_time') for r in all_results]
+        memory_search_times = [get_attr(r, 'memory_search_time') for r in all_results]
         
         # Calculate basic statistics
-        total_questions = sum(s.total_questions for s in summaries)
-        successful_evaluations = sum(s.successful_evaluations for s in summaries)
-        failed_evaluations = sum(s.failed_evaluations for s in summaries)
+        total_questions = sum(get_attr(s, 'total_questions') for s in summaries)
+        successful_evaluations = sum(get_attr(s, 'successful_evaluations') for s in summaries)
+        failed_evaluations = sum(get_attr(s, 'failed_evaluations') for s in summaries)
         success_rate = successful_evaluations / total_questions if total_questions > 0 else 0.0
         
         # Calculate averages and standard deviations
@@ -306,29 +324,46 @@ class EvaluationAnalyzer:
         comparison_results = []
         
         for summary in results_data[baseline_mode]:
-            baseline_results.extend(summary.results)
+            # Handle both object and dictionary formats
+            if hasattr(summary, 'results'):
+                baseline_results.extend(summary.results)
+            elif isinstance(summary, dict) and 'results' in summary:
+                baseline_results.extend(summary['results'])
         
         for summary in results_data[comparison_mode]:
-            comparison_results.extend(summary.results)
+            # Handle both object and dictionary formats
+            if hasattr(summary, 'results'):
+                comparison_results.extend(summary.results)
+            elif isinstance(summary, dict) and 'results' in summary:
+                comparison_results.extend(summary['results'])
         
         if not baseline_results or not comparison_results:
             return
         
+        # Helper function to get attribute from object or dictionary
+        def get_attr(item, attr_name):
+            if hasattr(item, attr_name):
+                return getattr(item, attr_name)
+            elif isinstance(item, dict):
+                return item.get(attr_name, 0)
+            else:
+                return 0
+        
         # Extract metric values
-        baseline_f1 = [r.f1_score for r in baseline_results]
-        comparison_f1 = [r.f1_score for r in comparison_results]
+        baseline_f1 = [get_attr(r, 'f1_score') for r in baseline_results]
+        comparison_f1 = [get_attr(r, 'f1_score') for r in comparison_results]
         
-        baseline_bleu = [r.bleu_1_score for r in baseline_results]
-        comparison_bleu = [r.bleu_1_score for r in comparison_results]
+        baseline_bleu = [get_attr(r, 'bleu_1_score') for r in baseline_results]
+        comparison_bleu = [get_attr(r, 'bleu_1_score') for r in comparison_results]
         
-        baseline_judge = [r.llm_judge_score for r in baseline_results]
-        comparison_judge = [r.llm_judge_score for r in comparison_results]
+        baseline_judge = [get_attr(r, 'llm_judge_score') for r in baseline_results]
+        comparison_judge = [get_attr(r, 'llm_judge_score') for r in comparison_results]
         
-        baseline_gen_time = [r.generation_time for r in baseline_results]
-        comparison_gen_time = [r.generation_time for r in comparison_results]
+        baseline_gen_time = [get_attr(r, 'generation_time') for r in baseline_results]
+        comparison_gen_time = [get_attr(r, 'generation_time') for r in comparison_results]
         
-        baseline_search_time = [r.memory_search_time for r in baseline_results]
-        comparison_search_time = [r.memory_search_time for r in comparison_results]
+        baseline_search_time = [get_attr(r, 'memory_search_time') for r in baseline_results]
+        comparison_search_time = [get_attr(r, 'memory_search_time') for r in comparison_results]
         
         # Perform t-tests
         try:
@@ -370,12 +405,21 @@ class EvaluationAnalyzer:
                              dataset_filename: str = None) -> Dict[str, Any]:
         """Generate dataset information summary."""
         
+        # Helper function to get attribute from object or dictionary
+        def get_attr(item, attr_name):
+            if hasattr(item, attr_name):
+                return getattr(item, attr_name)
+            elif isinstance(item, dict):
+                return item.get(attr_name, 0)
+            else:
+                return 0
+        
         total_conversations = 0
         total_questions = 0
         
         for mode, summaries in results_data.items():
             mode_conversations = len(summaries)
-            mode_questions = sum(s.total_questions for s in summaries)
+            mode_questions = sum(get_attr(s, 'total_questions') for s in summaries)
             
             total_conversations = max(total_conversations, mode_conversations)
             total_questions = max(total_questions, mode_questions)
@@ -494,21 +538,11 @@ class EvaluationAnalyzer:
                                      f"{speed_diff:.1f}s faster per question than {slowest_mode[0].upper()}. "
                                      f"Consider speed requirements for production deployment.")
         
-        # Data quality recommendations
-        total_questions = sum(stats.total_questions for stats in memory_mode_stats.values())
-        if total_questions < 50:
-            recommendations.append("[SAMPLE] **Small sample size**: Consider evaluating on more questions "
-                                 f"(current: {total_questions}) for more robust statistical conclusions.")
-        
         # Success rate recommendations
         low_success_modes = [mode for mode, stats in memory_mode_stats.items() if stats.success_rate < 0.9]
         if low_success_modes:
             recommendations.append(f"[ERROR] **Low success rates** detected in {', '.join(low_success_modes)} "
                                  f"modes. Investigate evaluation failures and error handling.")
-        
-        # Future work recommendations
-        recommendations.append("[FUTURE] **Future work**: Consider evaluating on larger datasets, "
-                             "different question types, and longer conversation histories for comprehensive analysis.")
         
         return recommendations
     

@@ -314,7 +314,7 @@ class MemoryEvaluator:
         
         # Populate memory with conversation
         population_stats = self.populate_chatbot_memory(chatbot, conversation)
-        self.logger.info(f"💭 Populated memory: {population_stats['messages_added']} messages in {population_stats['population_time']:.2f}s")
+        self.logger.info(f"Populated memory: {population_stats['messages_added']} messages in {population_stats['population_time']:.2f}s")
         
         # Evaluate each question
         results = []

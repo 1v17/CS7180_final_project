@@ -13,10 +13,11 @@ Options:
     --output-dir: Output directory for results (default: ./evaluation/evaluation_output)
     --max-conversations: Max conversations to evaluate (default: 3, use -1 for all)
     --memory-modes: Comma-separated memory modes (default: standard,ebbinghaus)
-    --analyze-only: Only run analysis on existing results (provide JSON path)
     --quick-test: Run with 1 conversation and test model for quick validation
     --no-llm-judge: Disable LLM judge evaluation (faster)
     --answer-tokens: Max tokens for answer generation (default: 150)
+
+Note: Analysis is now handled separately using combine_results.py after running evaluations.
 """
 
 import sys
@@ -32,7 +33,6 @@ sys.path.append(str(project_root))
 
 from evaluation.evaluation_config import EvaluationConfig
 from evaluation.memory_evaluator import MemoryEvaluator
-from evaluation.results_analyzer import EvaluationAnalyzer
 
 def setup_logging(output_dir: str) -> logging.Logger:
     """Set up logging configuration."""
@@ -72,15 +72,15 @@ Examples:
     # Evaluate specific memory modes only
     python run_locomo_evaluation.py --memory-modes standard --max-conversations 5
     
-    # Only analyze existing results
-    python run_locomo_evaluation.py --analyze-only ./evaluation/evaluation_output/results.json
-    
     # Custom configuration
     python run_locomo_evaluation.py \\
         --model-path ./models/mymodel \\
         --dataset ./my_dataset.json \\
         --max-conversations 10 \\
         --answer-tokens 200
+        
+    # Analyze results from multiple runs
+    python combine_results.py standard_results.json ebbinghaus_results.json
         """
     )
     
@@ -109,9 +109,9 @@ Examples:
     parser.add_argument('--answer-tokens', type=int, default=150,
                        help='Maximum tokens for answer generation')
     
-    # Analysis settings
-    parser.add_argument('--analyze-only',
-                       help='Only run analysis on existing JSON results file')
+    # Analysis settings - REMOVED: Analysis now handled by combine_results.py
+    # parser.add_argument('--analyze-only',
+    #                    help='Only run analysis on existing JSON results file')
     
     # Quick test mode
     parser.add_argument('--quick-test', action='store_true',
@@ -187,6 +187,11 @@ def run_evaluation(config: EvaluationConfig, logger: logging.Logger):
         evaluation_duration = datetime.now() - evaluation_start
         logger.info(f"[SUCCESS] Evaluation completed in {evaluation_duration}")
         
+        # Save evaluation results to JSON file
+        logger.info("[SAVE] Saving evaluation results...")
+        results_file = evaluator.save_results(results)
+        logger.info(f"💾 Evaluation results saved to: {results_file}")
+        
         # Print evaluation summary
         print_evaluation_summary(results, logger)
         
@@ -198,47 +203,6 @@ def run_evaluation(config: EvaluationConfig, logger: logging.Logger):
         logger.error(traceback.format_exc())
         return None
 
-def run_analysis(results_or_path, dataset_name: str, logger: logging.Logger):
-    """Run comprehensive analysis on evaluation results."""
-    logger.info("[ANALYSIS] Starting Results Analysis...")
-    
-    try:
-        # Initialize analyzer
-        analyzer = EvaluationAnalyzer()
-        
-        # If path provided, load results
-        if isinstance(results_or_path, str):
-            logger.info(f"[LOAD] Loading results from: {results_or_path}")
-            import json
-            with open(results_or_path, 'r', encoding='utf-8') as f:
-                raw_data = json.load(f)
-            # Convert to expected format (implementation depends on your data structure)
-            results_data = raw_data  # Simplified for now
-        else:
-            # Use provided results directly
-            results_data = results_or_path
-            
-        # Run analysis
-        analysis_start = datetime.now()
-        report = analyzer.analyze_results(results_data, dataset_name)
-        analysis_duration = datetime.now() - analysis_start
-        
-        logger.info(f"[SUCCESS] Analysis completed in {analysis_duration}")
-        
-        # Print and save report
-        print_analysis_summary(report, logger)
-        report_path = analyzer.save_report(report)
-        
-        logger.info(f"[SAVE] Analysis report saved to: {report_path}")
-        
-        return report
-        
-    except Exception as e:
-        logger.error(f"[ERROR] Analysis failed: {e}")
-        import traceback
-        logger.error(traceback.format_exc())
-        return None
-
 def print_evaluation_summary(results, logger: logging.Logger):
     """Print evaluation results summary."""
     logger.info("")
@@ -246,37 +210,46 @@ def print_evaluation_summary(results, logger: logging.Logger):
     logger.info("[SUMMARY] EVALUATION RESULTS SUMMARY")
     logger.info("="*60)
     
-    for mode_results in results:
-        mode = mode_results.memory_mode.upper()
-        success_rate = (mode_results.successful_evaluations / mode_results.total_questions) * 100
+    # Handle dictionary format: {memory_mode: [ConversationEvaluationSummary, ...]}
+    for memory_mode, mode_conversations in results.items():
+        logger.info(f"\n[{memory_mode.upper()}] MEMORY MODE:")
         
-        logger.info(f"[{mode}] MEMORY MODE:")
+        if not mode_conversations:
+            logger.warning(f"   No results found for {memory_mode} mode")
+            continue
+        
+        # Aggregate statistics across all conversations for this mode
+        total_questions = sum(conv.total_questions for conv in mode_conversations)
+        total_successful = sum(conv.successful_evaluations for conv in mode_conversations)
+        
+        if total_questions > 0:
+            success_rate = (total_successful / total_questions) * 100
+            avg_f1 = sum(conv.avg_f1_score * conv.total_questions for conv in mode_conversations) / total_questions
+            avg_bleu = sum(conv.avg_bleu_1_score * conv.total_questions for conv in mode_conversations) / total_questions
+            avg_judge = sum(conv.avg_llm_judge_score * conv.total_questions for conv in mode_conversations) / total_questions
+            avg_gen_time = sum(conv.avg_generation_time * conv.total_questions for conv in mode_conversations) / total_questions
+            avg_search_time = sum(conv.avg_memory_search_time * conv.total_questions for conv in mode_conversations) / total_questions
+        else:
+            success_rate = avg_f1 = avg_bleu = avg_judge = avg_gen_time = avg_search_time = 0.0
+        
         logger.info(f"   [SUCCESS] Success rate: {success_rate:.1f}%")
-        logger.info(f"   [QUESTIONS] Questions evaluated: {mode_results.total_questions}")
-        logger.info(f"   [F1] Average F1 Score: {mode_results.avg_f1_score:.3f}")
-        logger.info(f"   [BLEU] Average BLEU-1: {mode_results.avg_bleu_1_score:.3f}")
-        logger.info(f"   [LLM] Average LLM Judge: {mode_results.avg_llm_judge_score:.1f}")
-        logger.info(f"   [TIME] Average generation time: {mode_results.avg_generation_time:.2f}s")
-        logger.info(f"   [SEARCH] Average search time: {mode_results.avg_memory_search_time:.3f}s")
+        logger.info(f"   [QUESTIONS] Questions evaluated: {total_questions}")
+        logger.info(f"   [CONVERSATIONS] Conversations: {len(mode_conversations)}")
+        logger.info(f"   [F1] Average F1 Score: {avg_f1:.3f}")
+        logger.info(f"   [BLEU] Average BLEU-1: {avg_bleu:.3f}")
+        logger.info(f"   [LLM] Average LLM Judge: {avg_judge:.1f}")
+        logger.info(f"   [TIME] Average generation time: {avg_gen_time:.2f}s")
+        logger.info(f"   [SEARCH] Average search time: {avg_search_time:.3f}s")
         
         # Check for issues
-        empty_count = sum(1 for result in mode_results.results if result.generated_answer == "")
-        if empty_count > 0:
-            logger.warning(f"   [WARNING] Empty responses: {empty_count}/{len(mode_results.results)}")
-        
-        logger.info("")
-
-def print_analysis_summary(report, logger: logging.Logger):
-    """Print analysis results summary.""" 
-    logger.info("")
-    logger.info("="*60)
-    logger.info("[ANALYSIS] COMPREHENSIVE ANALYSIS RESULTS")
-    logger.info("="*60)
+        total_empty = sum(
+            sum(1 for result in conv.results if result.generated_answer == "") 
+            for conv in mode_conversations
+        )
+        if total_empty > 0:
+            logger.warning(f"   [WARNING] Empty responses: {total_empty}/{total_questions}")
     
-    # Use the existing analyzer's print method
-    from evaluation.results_analyzer import EvaluationAnalyzer
-    analyzer = EvaluationAnalyzer()
-    analyzer.print_summary_report(report)
+    logger.info("")
 
 def main():
     """Main execution function."""
@@ -293,41 +266,19 @@ def main():
     logger.info("")
     
     try:
-        # Analysis-only mode
-        if args.analyze_only:
-            logger.info("[MODE] Running analysis-only mode")
-            dataset_name = Path(args.dataset).name
-            report = run_analysis(args.analyze_only, dataset_name, logger)
-            
-            if report:
-                logger.info("[SUCCESS] Analysis-only mode completed successfully!")
-            else:
-                logger.error("[ERROR] Analysis failed")
-                return 1
+        # Create configuration
+        config = create_evaluation_config(args)
         
-        # Full evaluation mode
-        else:
-            # Create configuration
-            config = create_evaluation_config(args)
-            
-            # Run evaluation
-            logger.info("[PIPELINE] Running full evaluation pipeline")
-            results = run_evaluation(config, logger)
-            
-            if results is None:
-                logger.error("[ERROR] Evaluation pipeline failed")
-                return 1
-            
-            # Run analysis on results
-            dataset_name = Path(config.dataset_path).name
-            logger.info("[TRANSITION] Proceeding to analysis phase...")
-            report = run_analysis(results, dataset_name, logger)
-            
-            if report:
-                logger.info("[SUCCESS] Complete evaluation pipeline finished successfully!")
-            else:
-                logger.warning("[WARNING] Evaluation completed but analysis failed")
-                return 0  # Evaluation succeeded even if analysis failed
+        # Run evaluation
+        logger.info("[PIPELINE] Running evaluation pipeline")
+        results = run_evaluation(config, logger)
+        
+        if results is None:
+            logger.error("[ERROR] Evaluation pipeline failed")
+            return 1
+        
+        logger.info("[SUCCESS] Evaluation completed successfully!")
+        logger.info("ℹ️  Use combine_results.py to analyze results from multiple runs")
         
         logger.info(f"[COMPLETE] Process completed at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         return 0

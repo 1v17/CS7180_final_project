@@ -401,17 +401,68 @@ project/
 4. ✅ **results_analyzer.py** - Comprehensive statistical analysis and reporting
 5. ✅ **run_locomo_evaluation.py** - Main runner with command-line interface
 
-**Key Issues Identified and Resolved:**
-- Empty response issue traced to small model limitations
-- Prompt format optimized for model compatibility
-- LLM judge switched to OpenAI API for reliability
-- Statistical analysis enhanced with scipy integration
+## Actual Commands Used
 
-**System Ready For:**
-- Full evaluation runs with proper model
-- Comprehensive statistical analysis
-- Flexible execution modes via CLI
-- Production-quality evaluation pipeline
+### Individual Memory Mode Evaluations (Sequential Approach)
+```bash
+# Run standard memory evaluation
+python evaluation\run_locomo_evaluation.py --model-path ./models/TinyLlama-1.1B-Chat-v1.0 --memory-modes standard --max-conversations 3
+
+# Run ebbinghaus memory evaluation  
+python evaluation\run_locomo_evaluation.py --model-path ./models/TinyLlama-1.1B-Chat-v1.0 --memory-modes ebbinghaus --max-conversations 3
+
+# Combine results from both runs
+python evaluation\combine_results.py evaluation\evaluation_output\locomo_evaluation_results_20250805_234213.json evaluation\evaluation_output\locomo_evaluation_results_20250805_235406.json
+```
+
+### Additional Utility Commands
+```bash
+# Quick test mode
+python evaluation\run_locomo_evaluation.py --quick-test
+
+# Custom configuration with larger model
+python evaluation\run_locomo_evaluation.py --model-path ./models/Llama-3.1-8B-Instruct --max-conversations 10 --memory-modes standard,ebbinghaus
+```
+
+## Critical Bugs and Limitations Discovered
+
+### 1. **Qdrant Database Lock Conflicts** 
+**Issue**: KeyError: 'ebbinghaus' - ChatBot instances disappeared from dictionary during simultaneous evaluation
+```
+[ERROR] Failed to evaluate with ebbinghaus chatbot: 'ebbinghaus'
+```
+**Root Cause**: Qdrant vector database lock conflicts when multiple ChatBot instances try to access same database
+```
+[WinError 32] The process cannot access the file because it is being used by another process: '/tmp/qdrant\\.lock'
+```
+**Solution**: Sequential evaluation approach - run each memory mode separately, then combine results
+
+### 2. **Data Structure Mismatch in Analysis**
+**Issue**: AttributeError when combining results for analysis
+```
+AttributeError: 'dict' object has no attribute 'results'
+AttributeError: 'dict' object has no attribute 'total_questions'
+```
+**Root Cause**: results_analyzer.py expected ConversationEvaluationSummary objects but received dictionary format from JSON files
+**Solution**: Added helper function to handle both object and dictionary formats in results_analyzer.py
+
+### 3. **Empty Response Generation**
+**Issue**: Small models (test_local_model) generate empty responses with complex instruction prompts
+**Solution**: Use larger models (TinyLlama-1.1B-Chat-v1.0 minimum) for reliable evaluation
+
+## Architecture Changes Made
+
+### Sequential Evaluation Workflow
+**Original Plan**: Simultaneous evaluation of both memory modes in single run
+**Final Implementation**: 
+1. Run individual evaluations separately
+2. Use combine_results.py to merge and analyze results
+3. Avoids database conflicts and provides more flexibility
+4. **Sequential Over Simultaneous**: Database conflicts forced sequential evaluation approach
+5. **Dictionary Format Handling**: Enhanced results_analyzer.py to handle both object and dictionary formats
+6. **Separate Analysis Tool**: Created combine_results.py for flexible result combination and analysis
+7. **Raw Results Storage**: Ensured both raw evaluation data and analysis reports are saved
+8. **Removed Analysis Mode**: Simplified run_locomo_evaluation.py to focus on evaluation only
 
 This approach maximized reuse of your existing, working code while adding a comprehensive evaluation framework. The ChatBot serves as the engine for both memory population and answer generation, while OpenAI API provides reliable evaluation scoring.
 <!-- TODO: Review and verify the implementation of this evaluation plan -->
