@@ -192,6 +192,62 @@ python tests/run_tests.py
 python -m pytest tests/test_ebbinghaus_memory.py -v
 ```
 
+## Evaluation System
+
+This project includes a comprehensive evaluation system that compares the Ebbinghaus memory implementation against standard Mem0 memory using the LOCOMO dataset. The evaluation system provides statistical analysis and performance comparisons between different memory modes.
+
+### Prerequisites for Evaluation
+
+1. **Larger Model**: For reliable evaluation results, use a larger model like:
+   - `./models/TinyLlama-1.1B-Chat-v1.0` (minimum)
+   
+   Small models like `microsoft/DialoGPT-medium` may generate empty responses. Follow the instructions for **Using Different Models** to add model into the /models folder.
+
+2. **LOCOMO Dataset**: Sample dataset is included at `resources/dataset/locomo10_sample.json`, which contains 2 of the 20 conversations. The entire dataset is `resources/dataset/locomo10.json`.
+
+### Running Evaluations
+
+#### Quick Test Mode
+For a fast evaluation with minimal data:
+```bash
+python evaluation\run_locomo_evaluation.py --quick-test
+```
+
+#### Individual Memory Mode Evaluation
+Due to database lock conflicts, memory modes should be evaluated separately:
+
+```bash
+# Evaluate standard memory mode
+python evaluation\run_locomo_evaluation.py --model-path ./models/TinyLlama-1.1B-Chat-v1.0 --memory-modes standard
+
+# Evaluate Ebbinghaus memory mode  
+python evaluation\run_locomo_evaluation.py --model-path ./models/TinyLlama-1.1B-Chat-v1.0 --memory-modes ebbinghaus
+```
+
+#### Combine and Analyze Results
+After running separate evaluations, combine the results for statistical analysis:
+
+```bash
+# Replace with your actual result file names
+python evaluation\combine_results.py evaluation\evaluation_output\locomo_evaluation_results_TIMESTAMP1.json evaluation\evaluation_output\locomo_evaluation_results_TIMESTAMP2.json
+```
+
+#### Advanced Options
+```bash
+# Custom model and configuration
+python evaluation\run_locomo_evaluation.py --model-path ./models/Llama-3.1-8B-Instruct --max-conversations 20 --memory-modes standard
+
+# Use different dataset (if available)
+python evaluation\run_locomo_evaluation.py --dataset-path ./resources/dataset/custom_dataset.json
+```
+
+### Evaluation Metrics
+
+The evaluation system uses multiple metrics to assess performance:
+
+1. **F1 Score**: Measures precision and recall of generated answers
+2. **BLEU-1 Score**: Evaluates n-gram overlap with ground truth
+3. **LLM Judge Score**: GPT-4o-mini rates answers on a 1-100 scale
 
 ## Configuration
 

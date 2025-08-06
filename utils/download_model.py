@@ -4,8 +4,10 @@ It should only be run once to download the model files.
 """
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
-MODEL_NAME = "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
-MODEL_PATH = "./models/TinyLlama-1.1B-Chat-v1.0"
+# Define the model name and local path
+# Change MODEL_NAME to the desired model from Hugging Face
+MODEL_NAME = "microsoft/DialoGPT-medium"
+MODEL_PATH = "./models/test_local_model"
 
 # First time - this downloads to cache
 model = AutoModelForCausalLM.from_pretrained(MODEL_NAME)

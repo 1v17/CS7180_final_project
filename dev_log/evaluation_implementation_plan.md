@@ -241,13 +241,12 @@ answer = chatbot.chat(
 2. Import your existing `ChatBot` class
 3. Add command-line argument parsing (no API key needed)
 4. Implement main execution flow:
-   - Initialize ChatBot instances for both memory modes
-   - Load dataset
+   - Initialize one ChatBot instance
+   - Load dataset by directly using Chatbot's memory system
    - Initialize evaluator
-   - Run evaluation using ChatBot instances
+   - Run evaluation using the ChatBot instance
    - Analyze results
    - Print summary
-   - Cleanup ChatBot instances
 5. Add error handling and logging
 
 ## Integration Points with Your Existing Code
@@ -377,7 +376,7 @@ project/
 2. **OpenAI API for LLM Judge**: Use GPT-4o-mini via OpenAI API for consistent, reliable evaluation (not ChatBot)
 3. **Model Size Matters**: Full Llama-3.1-8B-Instruct required - smaller models fail with complex prompts
 4. **Simplified Prompt Format**: Use "Context: X\nQuestion: Y\nAnswer:" instead of complex instructions
-5. **Memory Mode Comparison**: Create two ChatBot instances (standard vs ebbinghaus) for direct comparison
+5. **Memory Mode Comparison**: Create two ChatBot instances (standard vs ebbinghaus) sequentially for direct comparison
 6. **Conversation Simulation**: Use `chatbot.chat()` calls with minimal tokens to populate memory naturally
 7. **Statistical Rigor**: Comprehensive statistical analysis with significance testing and effect sizes
 8. **Flexible Execution**: Multiple execution modes (full pipeline, analysis-only, quick test)
@@ -465,4 +464,3 @@ AttributeError: 'dict' object has no attribute 'total_questions'
 8. **Removed Analysis Mode**: Simplified run_locomo_evaluation.py to focus on evaluation only
 
 This approach maximized reuse of your existing, working code while adding a comprehensive evaluation framework. The ChatBot serves as the engine for both memory population and answer generation, while OpenAI API provides reliable evaluation scoring.
-<!-- TODO: Review and verify the implementation of this evaluation plan -->
