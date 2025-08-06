@@ -406,10 +406,10 @@ project/
 ### Individual Memory Mode Evaluations (Sequential Approach)
 ```bash
 # Run standard memory evaluation
-python evaluation\run_locomo_evaluation.py --model-path ./models/TinyLlama-1.1B-Chat-v1.0 --memory-modes standard --max-conversations 3
+python evaluation\run_locomo_evaluation.py --model-path ./models/TinyLlama-1.1B-Chat-v1.0 --memory-modes standard --max-conversations 2
 
 # Run ebbinghaus memory evaluation  
-python evaluation\run_locomo_evaluation.py --model-path ./models/TinyLlama-1.1B-Chat-v1.0 --memory-modes ebbinghaus --max-conversations 3
+python evaluation\run_locomo_evaluation.py --model-path ./models/TinyLlama-1.1B-Chat-v1.0 --memory-modes ebbinghaus --max-conversations 2
 
 # Combine results from both runs
 python evaluation\combine_results.py evaluation\evaluation_output\locomo_evaluation_results_20250805_234213.json evaluation\evaluation_output\locomo_evaluation_results_20250805_235406.json
