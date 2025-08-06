@@ -196,7 +196,28 @@ class MemoryEvaluator:
             # Add directly to memory (bypass chat simulation)
             messages_added = 0
             if messages:
-                result = chatbot.memory.add(messages, user_id=user_id)
+                # Include timestamp metadata when adding to memory
+                # Collect all session timestamps from the conversation
+                session_timestamps = {}
+                for key, value in conversation.metadata.items():
+                    if key.endswith("_date_time") and key.startswith("session_"):
+                        session_timestamps[key] = value
+                
+                # Get the earliest/first session timestamp dynamically
+                earliest_session_date = ""
+                if session_timestamps:
+                    # Sort by session number to get the first one
+                    sorted_sessions = sorted(session_timestamps.keys(), 
+                                           key=lambda x: int(x.split('_')[1]))
+                    earliest_session_date = session_timestamps[sorted_sessions[0]]
+                
+                metadata = {
+                    "session_timestamps": session_timestamps,
+                    "conversation_date": earliest_session_date,
+                    "original_conversation_id": conversation.conversation_id
+                }
+                
+                result = chatbot.memory.add(messages, user_id=user_id, metadata=metadata)
                 messages_added = len(messages)
             
             population_time = time.time() - start_time

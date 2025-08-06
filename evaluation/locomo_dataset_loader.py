@@ -200,15 +200,33 @@ class LOCOMODatasetLoader:
         questions = []
         qa_data = conversation_data.get('qa', [])
         
+        # Parse LOCOMO qa structure - handles adversarial_answer format
         for q_data in qa_data:
             if isinstance(q_data, dict):
-                question = EvaluationQuestion(
-                    question=q_data.get('question', ''),
-                    answer=q_data.get('answer', ''),
-                    evidence=q_data.get('evidence', []),
-                    category=q_data.get('category')
-                )
-                questions.append(question)
+                # Skip category-only entries
+                if 'category' in q_data and len(q_data) == 1:
+                    continue
+                
+                # Handle adversarial_answer entries (create synthetic questions)
+                if 'adversarial_answer' in q_data:
+                    question = EvaluationQuestion(
+                        question=f"Question for answer: {q_data['adversarial_answer'][:50]}...",  # Synthetic question
+                        answer=q_data['adversarial_answer'],
+                        evidence=[],
+                        category=q_data.get('category')
+                    )
+                    questions.append(question)
+                # Handle standard question-answer pairs
+                elif 'question' in q_data or 'answer' in q_data:
+                    question = EvaluationQuestion(
+                        question=q_data.get('question', ''),
+                        answer=q_data.get('answer', ''),
+                        evidence=q_data.get('evidence', []),
+                        category=q_data.get('category')
+                    )
+                    # Only add if both question and answer are present
+                    if question.question.strip() and str(question.answer).strip():
+                        questions.append(question)
         
         # Alternative structure: direct questions list
         if not questions and 'questions' in conversation_data:
@@ -220,7 +238,11 @@ class LOCOMODatasetLoader:
                         evidence=q_data.get('evidence', q_data.get('sources', [])),
                         category=q_data.get('category', q_data.get('type'))
                     )
-                    questions.append(question)
+                    # Only add if both question and answer are present
+                    question_text = str(question.question).strip() if question.question is not None else ""
+                    answer_text = str(question.answer).strip() if question.answer is not None else ""
+                    if question_text and answer_text:
+                        questions.append(question)
         
         return questions
     
@@ -338,9 +360,13 @@ class LOCOMODatasetLoader:
             issues.append("No questions found")
         else:
             for i, question in enumerate(conversation.questions):
-                if not question.question.strip():
+                # Convert to string and then check if empty after stripping
+                question_text = str(question.question).strip() if question.question is not None else ""
+                answer_text = str(question.answer).strip() if question.answer is not None else ""
+                
+                if not question_text:
                     issues.append(f"Question {i}: Empty question text")
-                if not question.answer.strip():
+                if not answer_text:
                     issues.append(f"Question {i}: Empty answer text")
         
         is_valid = len(issues) == 0
