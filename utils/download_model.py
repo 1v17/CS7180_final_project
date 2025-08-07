@@ -4,7 +4,8 @@ It should only be run once to download the model files.
 """
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
-# Using an open model that doesn't require authentication
+# Define the model name and local path
+# Change MODEL_NAME to the desired model from Hugging Face
 MODEL_NAME = "microsoft/DialoGPT-medium"
 MODEL_PATH = "./models/test_local_model"
 

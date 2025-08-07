@@ -1,0 +1,9 @@
+memory_mode,category,count,avg_f1_score,avg_bleu_1_score,avg_llm_judge_score
+ebbinghaus,1,32,0.0562,0.029,36.91
+ebbinghaus,2,37,0.042,0.0277,24.3
+ebbinghaus,3,13,0.0769,0.0388,52.31
+ebbinghaus,4,70,0.1411,0.0883,45.44
+standard,1,32,0.0477,0.024,38.03
+standard,2,37,0.0421,0.0263,27.35
+standard,3,13,0.0576,0.0268,54.23
+standard,4,70,0.0941,0.0481,44.66

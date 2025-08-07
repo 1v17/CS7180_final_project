@@ -424,7 +424,7 @@ project/
 ├── utils/
 │   └── download_model.py   # ✅ Utility for model management
 ├── models/                 # ✅ Local model storage
-├── resources/              # ✅ Dataset and resources
+├── resources/ dataset             # ✅ Dataset and resources
 ├── dev_log/                # ✅ Development documentation
 │   ├── ebbinghaus-memory-implementation.md  # ✅ This file (UPDATED)
 │   ├── phase1to3-implementation.md  # ✅ Detailed Phase 1 to 3 completion report
