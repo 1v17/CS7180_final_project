@@ -196,26 +196,25 @@ class LOCOMODatasetLoader:
             
         Returns:
             List[EvaluationQuestion]: List of standardized questions
+            
+        Note:
+            Category 5 (adversarial) entries with only 'adversarial_answer' are excluded
+            as they contain synthetic test data, not real questions from conversations.
         """
         questions = []
         qa_data = conversation_data.get('qa', [])
         
-        # Parse LOCOMO qa structure - handles adversarial_answer format
+        # Parse LOCOMO qa structure - skip adversarial entries
         for q_data in qa_data:
             if isinstance(q_data, dict):
                 # Skip category-only entries
                 if 'category' in q_data and len(q_data) == 1:
                     continue
                 
-                # Handle adversarial_answer entries (create synthetic questions)
+                # Skip adversarial_answer entries (category 5) - these are synthetic test data
                 if 'adversarial_answer' in q_data:
-                    question = EvaluationQuestion(
-                        question=f"Question for answer: {q_data['adversarial_answer'][:50]}...",  # Synthetic question
-                        answer=q_data['adversarial_answer'],
-                        evidence=[],
-                        category=q_data.get('category')
-                    )
-                    questions.append(question)
+                    continue
+                
                 # Handle standard question-answer pairs
                 elif 'question' in q_data or 'answer' in q_data:
                     question = EvaluationQuestion(
