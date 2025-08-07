@@ -303,6 +303,7 @@ project/
 │   ├── test_local_model/                # Small model - only for quick tests
 │   └── mymodel/                         # Custom models
 ├── resources/dataset/                   # LOCOMO JSON files
+│   ├── locomo10.json                   # Actual test dataset
 │   └── locomo10_sample.json            # Sample dataset used
 ├── evaluation/
 │   ├── evaluation_config.py            # ✅ Configuration and metrics
@@ -324,50 +325,6 @@ project/
 ├── ebbinghaus_memory.py               # YOUR EXISTING FILE
 ├── memory_config.py                   # YOUR EXISTING FILE
 └── .env                               # OPENAI_API_KEY for LLM judge
-```
-
-## Expected Output (UPDATED)
-```
-[SYSTEM] LOCOMO Evaluation System - Main Runner
-[START] Started at: 2025-08-05 16:16:31
-
-[CONFIG] CONFIGURATION SUMMARY:
-   Model: ./models/Llama-3.1-8B-Instruct
-   Dataset: ./resources/dataset/locomo10_sample.json
-   Output: ./evaluation/evaluation_output
-   Max conversations: 3
-   Memory modes: ['standard', 'ebbinghaus']
-   Answer tokens: 150
-   LLM judge: True
-
-[STANDARD] MEMORY MODE:
-   [SUCCESS] Success rate: 100.0%
-   [QUESTIONS] Questions evaluated: 10
-   [F1] Average F1 Score: 0.456
-   [BLEU] Average BLEU-1: 0.234
-   [LLM] Average LLM Judge: 72.3
-   [TIME] Average generation time: 2.45s
-   [SEARCH] Average search time: 0.187s
-
-[EBBINGHAUS] MEMORY MODE:
-   [SUCCESS] Success rate: 100.0%
-   [QUESTIONS] Questions evaluated: 10
-   [F1] Average F1 Score: 0.498
-   [BLEU] Average BLEU-1: 0.267
-   [LLM] Average LLM Judge: 76.8
-   [TIME] Average generation time: 2.62s
-   [SEARCH] Average search time: 0.201s
-
-[ANALYSIS] COMPREHENSIVE ANALYSIS RESULTS:
-   [VS] Ebbinghaus vs Standard Performance:
-   [F1] F1 Score: +0.042 (+9.2%) - Significant (p=0.023)
-   [BLEU] BLEU-1: +0.033 (+14.1%) - Significant (p=0.018)
-   [LLM] LLM Judge: +4.5 (+6.2%) - Significant (p=0.034)
-
-[RECOMMEND] RECOMMENDATIONS:
-   [WINNER] Ebbinghaus memory shows significant improvement
-   [SIGNIFICANT] Effect size: Medium (Cohen's d = 0.67)
-   [SPEED] Recommended for production deployment
 ```
 
 ## Key Design Decisions (UPDATED)
@@ -411,7 +368,7 @@ python evaluation\run_locomo_evaluation.py --model-path ./models/TinyLlama-1.1B-
 python evaluation\run_locomo_evaluation.py --model-path ./models/TinyLlama-1.1B-Chat-v1.0 --memory-modes ebbinghaus --max-conversations 2
 
 # Combine results from both runs
-python evaluation\combine_results.py evaluation\evaluation_output\locomo_evaluation_results_20250805_234213.json evaluation\evaluation_output\locomo_evaluation_results_20250805_235406.json
+python evaluation\combine_results.py evaluation\evaluation_output\locomo_evaluation_results_TIMESTAMP1.json evaluation\evaluation_output\locomo_evaluation_results_TIMESTAMP2.json
 ```
 
 ### Additional Utility Commands

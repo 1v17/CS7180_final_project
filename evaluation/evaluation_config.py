@@ -41,7 +41,7 @@ class EvaluationConfig:
     local_model_path: str = "./models/Llama-3.1-8B-Instruct"
     use_existing_chatbot: bool = True
     temperature: float = 0.0
-    max_conversations: int = 20  # There are in total 20 conversations in the LOCOMO dataset
+    max_conversations: int = 10  # There are in total 10 conversations in the LOCOMO dataset
     max_new_tokens: int = 100
     
     # Dataset settings
