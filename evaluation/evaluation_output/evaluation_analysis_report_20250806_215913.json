@@ -1,0 +1,121 @@
+{
+  "timestamp": "2025-08-06 21:59:13",
+  "dataset_info": {
+    "dataset_filename": "locomo10_sample.json",
+    "total_conversations": 1,
+    "total_questions": 199,
+    "average_questions_per_conversation": 199.0,
+    "memory_modes_evaluated": [
+      "standard",
+      "ebbinghaus"
+    ],
+    "scipy_available": true
+  },
+  "memory_mode_stats": {
+    "standard": {
+      "memory_mode": "standard",
+      "total_questions": 199,
+      "successful_evaluations": 199,
+      "failed_evaluations": 0,
+      "success_rate": 1.0,
+      "avg_f1_score": 0.0685443481165494,
+      "std_f1_score": 0.0813839504890924,
+      "avg_bleu_1_score": 0.0359075944381845,
+      "std_bleu_1_score": 0.050149848868112926,
+      "avg_llm_judge_score": 39.86842105263158,
+      "std_llm_judge_score": 29.17489717728212,
+      "avg_generation_time": 19.603917416773346,
+      "std_generation_time": 11.562799964603608,
+      "avg_memory_search_time": 0.4787089918789111,
+      "std_memory_search_time": 1.042510073392604,
+      "median_f1_score": 0.04706533776301218,
+      "median_bleu_1_score": 0.01711081986311344,
+      "median_llm_judge_score": 30.0,
+      "conversation_count": 1,
+      "avg_questions_per_conversation": 199.0
+    },
+    "ebbinghaus": {
+      "memory_mode": "ebbinghaus",
+      "total_questions": 152,
+      "successful_evaluations": 152,
+      "failed_evaluations": 0,
+      "success_rate": 1.0,
+      "avg_f1_score": 0.09363743248468485,
+      "std_f1_score": 0.11452429998378835,
+      "avg_bleu_1_score": 0.05682072081144958,
+      "std_bleu_1_score": 0.0927197726279889,
+      "avg_llm_judge_score": 39.08552631578947,
+      "std_llm_judge_score": 29.53546394057038,
+      "avg_generation_time": 21.190363744371815,
+      "std_generation_time": 10.993650733268202,
+      "avg_memory_search_time": 0.7145827208694658,
+      "std_memory_search_time": 0.8913364270490014,
+      "median_f1_score": 0.0816326530612245,
+      "median_bleu_1_score": 0.03660714285714285,
+      "median_llm_judge_score": 30.0,
+      "conversation_count": 1,
+      "avg_questions_per_conversation": 152.0
+    }
+  },
+  "comparisons": [
+    {
+      "baseline_mode": "standard",
+      "comparison_mode": "ebbinghaus",
+      "f1_score_diff": 0.025093084368135454,
+      "f1_score_percent_change": 36.60853893521377,
+      "bleu_1_score_diff": 0.020913126373265083,
+      "bleu_1_percent_change": 58.24151325221011,
+      "llm_judge_score_diff": -0.7828947368421098,
+      "llm_judge_percent_change": -1.9636963696369747,
+      "generation_time_diff": 1.5864463275984697,
+      "generation_time_percent_change": 8.092496483591017,
+      "memory_search_time_diff": 0.23587372899055475,
+      "memory_search_time_percent_change": 49.272884569132714,
+      "f1_p_value": 0.0284231650603236,
+      "bleu_1_p_value": 0.015018131155130982,
+      "llm_judge_p_value": 0.8163095519415737,
+      "generation_time_p_value": 0.22119333456703177,
+      "memory_search_time_p_value": 0.034806587050201426,
+      "f1_effect_size": 0.25258332816877505,
+      "bleu_1_effect_size": 0.28056827048421945,
+      "llm_judge_effect_size": -0.02666922696342402
+    }
+  ],
+  "summary": {
+    "memory_modes_count": 2,
+    "comparisons_count": 1,
+    "best_performing_mode": {
+      "f1_score": {
+        "mode": "ebbinghaus",
+        "score": 0.09363743248468485
+      },
+      "bleu_1_score": {
+        "mode": "ebbinghaus",
+        "score": 0.05682072081144958
+      },
+      "llm_judge_score": {
+        "mode": "standard",
+        "score": 39.86842105263158
+      }
+    },
+    "performance_improvements": [
+      {
+        "comparison": "ebbinghaus vs standard",
+        "metric": "F1 Score",
+        "improvement": "+36.6%",
+        "p_value": 0.0284231650603236
+      }
+    ],
+    "statistical_significance": {
+      "significant_differences": [
+        "F1: ebbinghaus vs standard"
+      ],
+      "alpha_level": 0.05
+    }
+  },
+  "recommendations": [
+    "[MIXED] **Mixed results**: EBBINGHAUS performs best on F1 score (0.094), while STANDARD performs best on LLM judge score (39.9).",
+    "[SIGNIFICANT] **Statistically significant improvements** found: ebbinghaus over standard.",
+    "[SPEED] **Performance trade-off**: STANDARD is 1.6s faster per question than EBBINGHAUS. Consider speed requirements for production deployment."
+  ]
+}
