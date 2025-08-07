@@ -9,6 +9,7 @@ import json
 import os
 import time
 import logging
+import csv
 from typing import Dict, List, Any, Optional, Tuple
 from dataclasses import dataclass
 import statistics
@@ -149,6 +150,31 @@ class EvaluationAnalyzer:
         
         self.logger.info("[SUCCESS] Analysis completed successfully!")
         return report
+    
+    def analyze_and_export_csv(self, results_data: Dict[str, List[Any]], 
+                              dataset_filename: str = None,
+                              output_dir: str = "./evaluation/evaluation_output") -> Tuple[EvaluationReport, str, str]:
+        """
+        Analyze results and export both JSON report and CSV category statistics.
+        
+        Args:
+            results_data: Raw evaluation results by memory mode
+            dataset_filename: Name of the dataset file used
+            output_dir: Output directory
+            
+        Returns:
+            Tuple[EvaluationReport, str, str]: (report, json_filepath, csv_filepath)
+        """
+        # Perform full analysis
+        report = self.analyze_results(results_data, dataset_filename)
+        
+        # Save JSON report
+        json_filepath = self.save_report(report, output_dir)
+        
+        # Export CSV statistics
+        csv_filepath = self.export_category_stats_to_csv(results_data, output_dir)
+        
+        return report, json_filepath, csv_filepath
     
     def _calculate_memory_mode_stats(self, mode: str, summaries: List[Any]) -> MemoryModeStats:
         """Calculate comprehensive statistics for a memory mode."""
@@ -626,6 +652,98 @@ class EvaluationAnalyzer:
             json.dump(report_dict, f, indent=2, ensure_ascii=False)
         
         self.logger.info(f"[SAVE] Analysis report saved to: {filepath}")
+        return filepath
+    
+    def export_category_stats_to_csv(self, results_data: Dict[str, List[Any]], 
+                                   output_dir: str = "./evaluation/evaluation_output") -> str:
+        """
+        Export category-based statistics to CSV file.
+        
+        Args:
+            results_data: Raw evaluation results by memory mode
+            output_dir: Output directory
+            
+        Returns:
+            str: Path to saved CSV file
+        """
+        os.makedirs(output_dir, exist_ok=True)
+        
+        # Collect all results by memory mode and category
+        category_stats = defaultdict(lambda: defaultdict(list))
+        
+        for memory_mode, summaries in results_data.items():
+            for summary in summaries:
+                # Handle both object and dictionary formats
+                if hasattr(summary, 'results'):
+                    results = summary.results
+                elif isinstance(summary, dict) and 'results' in summary:
+                    results = summary['results']
+                else:
+                    continue
+                
+                for result in results:
+                    # Get attribute helper function
+                    def get_attr(item, attr_name):
+                        if hasattr(item, attr_name):
+                            return getattr(item, attr_name)
+                        elif isinstance(item, dict):
+                            return item.get(attr_name, 0)
+                        else:
+                            return 0
+                    
+                    # Extract category from metadata
+                    metadata = get_attr(result, 'metadata')
+                    if metadata:
+                        if isinstance(metadata, dict):
+                            category = metadata.get('category', 'unknown')
+                        else:
+                            category = getattr(metadata, 'category', 'unknown')
+                    else:
+                        category = 'unknown'
+                    
+                    # Store scores by memory mode and category
+                    category_stats[memory_mode][category].append({
+                        'f1_score': get_attr(result, 'f1_score'),
+                        'bleu_1_score': get_attr(result, 'bleu_1_score'),
+                        'llm_judge_score': get_attr(result, 'llm_judge_score')
+                    })
+        
+        # Calculate averages for each memory mode and category
+        csv_data = []
+        for memory_mode, categories in category_stats.items():
+            for category, scores in categories.items():
+                if scores:  # Only process if there are scores
+                    avg_f1 = statistics.mean([s['f1_score'] for s in scores])
+                    avg_bleu = statistics.mean([s['bleu_1_score'] for s in scores])
+                    avg_judge = statistics.mean([s['llm_judge_score'] for s in scores])
+                    
+                    csv_data.append({
+                        'memory_mode': memory_mode,
+                        'category': category,
+                        'count': len(scores),
+                        'avg_f1_score': round(avg_f1, 4),
+                        'avg_bleu_1_score': round(avg_bleu, 4),
+                        'avg_llm_judge_score': round(avg_judge, 2)
+                    })
+        
+        # Sort by memory mode and category for consistent output
+        csv_data.sort(key=lambda x: (x['memory_mode'], x['category']))
+        
+        # Save to CSV file
+        timestamp = time.strftime("%Y%m%d_%H%M%S")
+        filename = f"category_performance_stats_{timestamp}.csv"
+        filepath = os.path.join(output_dir, filename)
+        
+        with open(filepath, 'w', newline='', encoding='utf-8') as csvfile:
+            fieldnames = ['memory_mode', 'category', 'count', 'avg_f1_score', 'avg_bleu_1_score', 'avg_llm_judge_score']
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            
+            writer.writeheader()
+            for row in csv_data:
+                writer.writerow(row)
+        
+        self.logger.info(f"[CSV] Category statistics saved to: {filepath}")
+        
         return filepath
     
     def print_summary_report(self, report: EvaluationReport):

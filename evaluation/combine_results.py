@@ -125,6 +125,11 @@ def run_combined_analysis(combined_data: Dict[str, Any], dataset_name: str,
         report_path = analyzer.save_report(report, output_dir)
         logger.info(f"📊 Analysis report saved to: {report_path}")
         
+        # Export category statistics to CSV
+        logger.info("📈 Exporting category statistics to CSV...")
+        csv_path = analyzer.export_category_stats_to_csv(combined_data, output_dir)
+        logger.info(f"📊 CSV statistics saved to: {csv_path}")
+        
         return report
         
     except Exception as e:
