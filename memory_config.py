@@ -17,9 +17,9 @@ class MemoryConfig:
         "forgetting_curve": {
             "enabled": False,               # Controlled by memory_mode
             "initial_strength": 1.0,        # Base strength for new memories
-            "min_retention_threshold": 0.1, # Minimum strength to keep memory
-            "retrieval_boost": 0.5,         # Strength increase on retrieval
-            "decay_rate": 0.5,             # Base decay rate
+            "min_retention_threshold": 0.2, # Does not apply in standard mode
+            "retrieval_boost": 0.5,         # Does not apply in standard mode
+            "decay_rate": 0.5,             # Does not apply in standard mode
             "soft_delete": True,           # Archive vs delete weak memories
         },
         "llm": {
@@ -55,7 +55,7 @@ class MemoryConfig:
         "forgetting_curve": {
             "enabled": True,
             "initial_strength": 1.0,
-            "min_retention_threshold": 0.1,
+            "min_retention_threshold": 0.2,
             "retrieval_boost": 0.5,
             "decay_rate": 0.3,  # Slower decay for production
             "soft_delete": True,
