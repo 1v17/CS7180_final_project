@@ -1,3 +1,7 @@
+# PyTorch with CUDA support - use specific installation command for GPU
+# Install with: pip install --index-url https://download.pytorch.org/whl/cu118
+# Or for CUDA 12.1: pip install torch --index-url https://download.pytorch.org/whl/cu121  
+# Or CPU only: pip install torch
 torch==2.7.1
 transformers==4.54.1
 safetensors==0.5.3
