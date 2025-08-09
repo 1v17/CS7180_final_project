@@ -22,11 +22,9 @@ This chatbot combines a local Large Language Model (LLM) with an innovative memo
 - Configurable memory decay parameters
 - Memory statistics and health monitoring
 - Soft delete system with memory restoration
-- Multi-user support with isolated memories
-- Comprehensive testing suite with 32+ test methods
 
 ### Model Support
-- Uses local LLM models (default: Microsoft DialoGPT-medium)
+- Uses local LLM models
 - Easy model switching - just change the model path
 - Supports any Hugging Face transformers-compatible model
 
@@ -153,14 +151,6 @@ ChatBot ready! Type 'quit' to exit.
 
 You: Hello, my name is Alice and I love hiking.
 Bot: Nice to meet you, Alice! Hiking is a wonderful hobby...
-
-You: /memory_status
-=== Memory Status ===
-Current Mode: ebbinghaus
-Config Mode: default
-Total memories: 1
-Strong memories: 1
-Weak memories: 0
 ```
 
 ## Using Different Models
@@ -299,7 +289,7 @@ Where:
 - **Initial Strength**: 1.0 for new memories
 - **Retrieval Boost**: +0.5 strength when accessed
 - **Decay Rate**: Configurable exponential decay
-- **Threshold**: Memories below 0.1 strength are archived
+- **Threshold**: Memories below retention threshold are archived
 
 ### Soft Delete Architecture
 
