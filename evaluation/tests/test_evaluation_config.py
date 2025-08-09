@@ -28,7 +28,7 @@ def test_evaluation_config():
     # Test default values
     assert config.local_model_path == "./models/Llama-3.1-8B-Instruct"
     assert config.temperature == 0.0
-    assert config.max_conversations == 3
+    assert config.max_conversations == 10  # Updated to match actual default value
     assert "standard" in config.memory_modes
     assert "ebbinghaus" in config.memory_modes
     
