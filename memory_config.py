@@ -37,7 +37,7 @@ class MemoryConfig:
             "enabled": True,
             "initial_strength": 1.0,
             "min_retention_threshold": 0.2,
-            "retrieval_boost": 0.3,
+            "retrieval_boost": 0.5, # Keeps the same for testing
             "decay_rate": 0.8,  # Faster decay for testing
             "soft_delete": True,
         },
