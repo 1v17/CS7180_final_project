@@ -180,30 +180,17 @@ chatbot = ChatBot(
 )
 ```
 
-## Testing
-
-The project includes a comprehensive testing suite with 32+ test methods:
-
-```bash
-# Run all tests
-python tests/run_tests.py
-
-# Run specific test files
-python -m pytest tests/test_ebbinghaus_memory.py -v
-```
-
 ## Evaluation System
 
 This project includes a comprehensive evaluation system that compares the Ebbinghaus memory implementation against standard Mem0 memory using the LOCOMO dataset. The evaluation system provides statistical analysis and performance comparisons between different memory modes.
 
 ### Prerequisites for Evaluation
 
-1. **Larger Model**: For reliable evaluation results, use a larger model like:
-   - `./models/TinyLlama-1.1B-Chat-v1.0` (minimum)
+1. **Larger Model**: For reliable evaluation results, use a larger model like: `./models/TinyLlama-1.1B-Chat-v1.0`
    
-   Small models like `microsoft/DialoGPT-medium` may generate empty responses. Follow the instructions for **Using Different Models** to add model into the /models folder.
+   Note: small models like `microsoft/DialoGPT-medium` may generate empty responses. Follow the instructions for **Using Different Models** to add model into the /models folder.
 
-2. **LOCOMO Dataset**: Sample dataset is included at `resources/dataset/locomo10_sample.json`, which contains 2 of the 20 conversations. The entire dataset is `resources/dataset/locomo10.json`.
+2. **LOCOMO Dataset**: Sample dataset is included at `resources/dataset/locomo10_sample.json`, which contains part of the 10 conversations in the complete dataset. The full dataset of 10 conversations is `resources/dataset/locomo10.json`.
 
 ### Running Evaluations
 
