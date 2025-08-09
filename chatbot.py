@@ -117,10 +117,14 @@ class ChatBot:
             max_length=INPUT_MAX_LENGTH
         )
         
+        # Move inputs to the same device as the model
+        device = next(self.model.parameters()).device
+        inputs = {k: v.to(device) for k, v in inputs.items()}
+        
         outputs = self.model.generate(
-            input_ids=inputs.input_ids,
-            attention_mask=inputs.attention_mask,
-            max_length=inputs.input_ids.shape[1] + max_new_tokens,
+            input_ids=inputs['input_ids'],
+            attention_mask=inputs['attention_mask'],
+            max_length=inputs['input_ids'].shape[1] + max_new_tokens,
             pad_token_id=self.tokenizer.pad_token_id,
             do_sample=True,
             temperature=OUTPUT_TEMPORARY,
@@ -129,7 +133,7 @@ class ChatBot:
         
         # Decode response
         response = self.tokenizer.decode(
-            outputs[0][inputs.input_ids.shape[1]:], 
+            outputs[0][inputs['input_ids'].shape[1]:], 
             skip_special_tokens=True
         )
         
