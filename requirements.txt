@@ -9,8 +9,7 @@ mem0ai==0.1.115
 huggingface_hub==0.34.3
 dotenv==0.9.9
 accelerate==1.9.0
-pandas==2.3.1 # TODO: remove when pandas is no longer used
-matplotlib==3.10.5 # TODO: remove when matplotlib is no longer used
-seaborn==0.13.2 # TODO: remove when seaborn is no longer used
+pandas==2.3.1
+matplotlib==3.10.5
 hf_xet==1.1.5 # optional, for downloading models
 nltk==3.9.1
