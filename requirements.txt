@@ -3,6 +3,8 @@
 # Or for CUDA 12.1: pip install torch --index-url https://download.pytorch.org/whl/cu121  
 # Or CPU only: pip install torch
 torch==2.7.1
+torchvision==0.22.1
+torchaudio==2.7.1
 transformers==4.54.1
 safetensors==0.5.3
 mem0ai==0.1.115
@@ -13,3 +15,9 @@ pandas==2.3.1
 matplotlib==3.10.5
 hf_xet==1.1.5 # optional, for downloading models
 nltk==3.9.1
+
+# For fine-tuning
+trl==0.21.0
+tensorboard==2.20.0
+datasets==4.0.0
+requests==2.32.4
