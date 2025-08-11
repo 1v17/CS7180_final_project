@@ -24,6 +24,11 @@ class TestChatBot(unittest.TestCase):
         self.chatbot.tokenizer = Mock()
         self.chatbot.memory = Mock()
         
+        # Set up model mock to handle parameters() call
+        mock_param = Mock()
+        mock_param.device = "cpu"
+        self.chatbot.model.parameters.return_value = iter([mock_param])
+        
         # Set up tokenizer mocks
         self.chatbot.tokenizer.pad_token = "[PAD]"
         self.chatbot.tokenizer.eos_token = "[EOS]"
@@ -43,13 +48,21 @@ class TestChatBot(unittest.TestCase):
         # Mock memory search to return empty results (first conversation)
         self.chatbot.memory.search.return_value = {'results': []}
         
-        # Mock tokenizer and model response
-        mock_inputs = Mock()
-        mock_inputs.input_ids = Mock()
-        mock_inputs.input_ids.shape = (1, 8)
-        mock_inputs.attention_mask = Mock()
+        # Mock tokenizer to return proper structure
+        mock_input_ids = Mock()
+        mock_input_ids.shape = (1, 8)
+        mock_input_ids.to.return_value = mock_input_ids
         
-        self.chatbot.tokenizer.return_value = mock_inputs
+        mock_attention_mask = Mock()
+        mock_attention_mask.to.return_value = mock_attention_mask
+        
+        mock_tokenizer_output = {
+            'input_ids': mock_input_ids,
+            'attention_mask': mock_attention_mask
+        }
+        self.chatbot.tokenizer.return_value = mock_tokenizer_output
+        
+        # Mock model generate
         self.chatbot.model.generate.return_value = [[0] * 12]
         self.chatbot.tokenizer.decode.return_value = "Nice to meet you! I'll remember that you like coffee."
         
@@ -74,13 +87,21 @@ class TestChatBot(unittest.TestCase):
         }
         self.chatbot.memory.search.return_value = mock_memory_response
         
-        # Mock tokenizer and model response
-        mock_inputs = Mock()
-        mock_inputs.input_ids = Mock()
-        mock_inputs.input_ids.shape = (1, 10)
-        mock_inputs.attention_mask = Mock()
+        # Mock tokenizer to return proper structure
+        mock_input_ids = Mock()
+        mock_input_ids.shape = (1, 10)
+        mock_input_ids.to.return_value = mock_input_ids
         
-        self.chatbot.tokenizer.return_value = mock_inputs
+        mock_attention_mask = Mock()
+        mock_attention_mask.to.return_value = mock_attention_mask
+        
+        mock_tokenizer_output = {
+            'input_ids': mock_input_ids,
+            'attention_mask': mock_attention_mask
+        }
+        self.chatbot.tokenizer.return_value = mock_tokenizer_output
+        
+        # Mock model generate
         self.chatbot.model.generate.return_value = [[0] * 15]
         self.chatbot.tokenizer.decode.return_value = "Based on our conversation, you like coffee!"
         

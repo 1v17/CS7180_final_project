@@ -22,11 +22,9 @@ This chatbot combines a local Large Language Model (LLM) with an innovative memo
 - Configurable memory decay parameters
 - Memory statistics and health monitoring
 - Soft delete system with memory restoration
-- Multi-user support with isolated memories
-- Comprehensive testing suite with 32+ test methods
 
 ### Model Support
-- Uses local LLM models (default: Microsoft DialoGPT-medium)
+- Uses local LLM models
 - Easy model switching - just change the model path
 - Supports any Hugging Face transformers-compatible model
 
@@ -153,14 +151,6 @@ ChatBot ready! Type 'quit' to exit.
 
 You: Hello, my name is Alice and I love hiking.
 Bot: Nice to meet you, Alice! Hiking is a wonderful hobby...
-
-You: /memory_status
-=== Memory Status ===
-Current Mode: ebbinghaus
-Config Mode: default
-Total memories: 1
-Strong memories: 1
-Weak memories: 0
 ```
 
 ## Using Different Models
@@ -180,30 +170,17 @@ chatbot = ChatBot(
 )
 ```
 
-## Testing
-
-The project includes a comprehensive testing suite with 32+ test methods:
-
-```bash
-# Run all tests
-python tests/run_tests.py
-
-# Run specific test files
-python -m pytest tests/test_ebbinghaus_memory.py -v
-```
-
 ## Evaluation System
 
 This project includes a comprehensive evaluation system that compares the Ebbinghaus memory implementation against standard Mem0 memory using the LOCOMO dataset. The evaluation system provides statistical analysis and performance comparisons between different memory modes.
 
 ### Prerequisites for Evaluation
 
-1. **Larger Model**: For reliable evaluation results, use a larger model like:
-   - `./models/TinyLlama-1.1B-Chat-v1.0` (minimum)
+1. **Larger Model**: For reliable evaluation results, use a larger model like: `./models/TinyLlama-1.1B-Chat-v1.0`
    
-   Small models like `microsoft/DialoGPT-medium` may generate empty responses. Follow the instructions for **Using Different Models** to add model into the /models folder.
+   Note: small models like `microsoft/DialoGPT-medium` may generate empty responses. Follow the instructions for **Using Different Models** to add model into the /models folder.
 
-2. **LOCOMO Dataset**: Sample dataset is included at `resources/dataset/locomo10_sample.json`, which contains 2 of the 20 conversations. The entire dataset is `resources/dataset/locomo10.json`.
+2. **LOCOMO Dataset**: Sample dataset is included at `resources/dataset/locomo10_sample.json`, which contains part of the 10 conversations in the complete dataset. The full dataset of 10 conversations is `resources/dataset/locomo10.json`.
 
 ### Running Evaluations
 
@@ -312,7 +289,7 @@ Where:
 - **Initial Strength**: 1.0 for new memories
 - **Retrieval Boost**: +0.5 strength when accessed
 - **Decay Rate**: Configurable exponential decay
-- **Threshold**: Memories below 0.1 strength are archived
+- **Threshold**: Memories below retention threshold are archived
 
 ### Soft Delete Architecture
 
