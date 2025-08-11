@@ -13,6 +13,10 @@ This chatbot combines a local Large Language Model (LLM) with an innovative memo
 
 ## Features
 
+### Fine-tuning
+
+We fine-tuned a model for this project, the fine-tuning and evaluation scripts could be found in [fine-tuning folder](./fine-tuning/).
+
 ### Memory Modes
 - **Standard Mode**: Traditional perfect memory (default Mem0 behavior)
 - **Ebbinghaus Mode**: Realistic memory with decay, strengthening, and forgetting
